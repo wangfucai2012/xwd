@@ -1,0 +1,120 @@
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ include file="/WEB-INF/views/include/taglib.jsp"%>
+<html>
+<head>
+<title>栅栏管理</title>
+<meta name="decorator" content="default"/>
+	<script type="text/javascript">
+        $(document).ready(function() {
+            $("#loginName").focus();
+            $("#inputForm").validate({
+                submitHandler: function(form){
+                    loading('正在提交，请稍等...');
+                    form.submit();
+                },
+                errorContainer: "#messageBox",
+                errorPlacement: function(error, element) {
+                    $("#messageBox").text("输入有误，请先更正。");
+                    if (element.is(":checkbox")||element.is(":radio")||element.parent().is(".input-append")){
+                        error.appendTo(element.parent().parent());
+                    } else {
+                        error.insertAfter(element);
+                    }
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+<ul class="nav nav-tabs">
+		<li><a href="${ctx}/data/work/fence?catalog=${fence.cat.id}">栅栏列表</a></li>
+		<li class="active"><a href="${ctx}/data/work/fence?catalog=${fence.cat.id}">栅栏添加</a></li>
+	</ul><br/>
+	<form:form id="inputForm" modelAttribute="fence" action="${ctx}/data/work/fence/save" method="post" class="form-horizontal">
+		<form:hidden path="id"/>
+		<form:hidden path="cat.id"/>
+		<sys:message msgcontent="${message}"/>
+		<div class="cs-detial1">
+			<table width="100%" border="0" align="center" cellpadding="0"
+			cellspacing="1" bgcolor="#dddddd" class="table table-striped table-bordered table-hover">
+				<tbody>
+					<tr>
+						<td class="span2" align="center">线名:</td>
+						<td class="span3" align="left"><form:input path="lineName" htmlEscape="false" maxlength="50" class="required"/>&nbsp;<font color="red">*</font></td>  
+						<td class="span2" align="center">所属固资卡片:</td>
+						<td class="span3" align="left">
+						<form:select path="ass.id" class="input-middle" style="width:158px">
+						<form:option value="" label="请选择"/>
+								<form:options items="${listorg}" itemLabel="name"  itemValue="id"
+									htmlEscape="false" />
+							</form:select>
+						<font color="red">*</font></td>
+					</tr>
+					<tr>
+						<td class="span2" align="center">行别:</td>
+						<td class="span3" align="left"><form:input path="stream" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+						<td class="span2" align="center">侧别:</td>
+						<td class="span3"  align="left"><form:input path="sideStream" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+					</tr>
+					<tr>
+					    <td class="span2" align="center">起始里程:</td>
+						<td class="span3" align="left"><form:input path="startM" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+						<td class="span2" align="center">终止里程:</td>
+						<td class="span3" align="left"><form:input path="endM" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+					</tr>
+					<tr>
+					    <td class="span2" align="center">栅栏长度:</td>
+						<td class="span3" align="left"><form:input path="fenceLength" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+						<td class="span2" align="center">网片样式:</td>
+						<td class="span3" align="left"><form:input path="netType" htmlEscape="false" maxlength="50" class="required"/>&nbsp;<font color="red">*</font></td>
+					</tr>
+					<tr>
+					    <td class="span2" align="center">立柱样式:</td>
+						<td class="span3" align="left"><form:input path="postType" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+						<td class="span2" align="center">距外轨距离:</td>
+						<td class="span3" align="left"><form:input path="railDistance" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+					</tr>
+					<tr>
+					    <td class="span2" align="center">埋设位置:</td>
+						<td class="span3" align="left"><form:input path="location" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+						<td class="span2" align="center">栅栏起始桥墩:</td>
+						<td class="span3" align="left"><form:input path="startB" htmlEscape="false" maxlength="50" class="required"/>&nbsp;<font color="red">*</font></td>
+					</tr>
+					<tr>
+					    <td class="span2" align="center">栅栏终止桥墩:</td>
+						<td class="span3" align="left"><form:input path="endB" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+						<td class="span2" align="center">栅栏安设年度:</td>
+						<td class="span3" align="left"><form:input path="builtYear" htmlEscape="false" maxlength="50" class="required"/>&nbsp;<font color="red">*</font></td>
+					</tr>
+					<tr>
+					    <td class="span2" align="center">栅栏门数量:</td>
+						<td class="span3" align="left"><form:input path="stockadeNum" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+						<td class="span2" align="center">是否安设刺丝滚笼:</td>
+						<td class="span3" align="left"><form:input path="flag" htmlEscape="false" maxlength="50" class="required"/>&nbsp;<font color="red">*</font></td>
+					</tr>
+					<tr>
+					    <td class="span2" align="center">速度区段:</td>
+						<td class="span3" align="left"><form:input path="speed" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+						<td class="span2" align="center">设备编码:</td>
+						<td class="span3" align="left"><form:input path="ecode" htmlEscape="false" maxlength="50" class="required"/>&nbsp;<font color="red">*</font></td>
+					</tr>
+					<tr>
+					    <td class="span2" align="center">备注:</td>
+						<td class="span3" align="left"><form:input path="note" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+					</tr>
+				</tbody>
+				<tfoot>
+					<tr bgcolor="#ffffff">
+						<td colspan="4" align="center">
+							
+									<input id="btnSubmit" class="btn btn-primary" type="submit"
+										value="保 存" />&nbsp;
+							<input id="btnCancel" class="btn" type="button" value="返 回" onclick="history.go(-1)"/>
+						</td>
+					</tr>
+				</tfoot>
+			</table>
+		</div>		
+	</form:form>
+</body>
+</html>

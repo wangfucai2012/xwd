@@ -1,0 +1,107 @@
+<%@ page contentType="text/html;charset=UTF-8"%>
+<%@ include file="/WEB-INF/views/include/taglib.jsp"%>
+<html>
+<head>
+<meta name="decorator" content="default"/>
+<title></title>
+
+<style type="text/css">
+.table td i {
+	margin: 0 2px;
+}
+</style>
+<script type="text/javascript">
+	$(function() {
+		$(".cs-detial1 tbody").find("tr:odd")
+				.css("background-color", "#eff8ff");
+		$(".cs-detial1 tbody").find("tr:even").css("background-color", "#fff");
+	});
+</script>
+</head>
+<body>
+	<ul class="nav nav-tabs">
+		<li class="active"><a href="${ctx}/data/work/corridor?catalog=${corridor.cat.id}">通道列表</a></li>
+		<li><a href="${ctx}/data/work/corridor/form?catalog=${corridor.cat.id}">通道添加</a></li>
+	</ul>
+	<br />
+	<form:form id="inputForm" modelAttribute="corridor"
+		action="${ctx}/data/work/corridor/save" method="post"
+		class="form-horizontal">
+		<form:hidden path="id" />
+		<form:hidden path="cat.id"/>
+		<tags:message msgcontent="${message}" />
+		<div class="cs-detial1">
+			<table width="100%" border="0" align="center" cellpadding="0"
+				cellspacing="1" bgcolor="#dddddd" class="table table-striped table-bordered table-hover">
+				<tbody>
+				    <tr>
+						<td class="span2" align="center">所属固资卡片:</td>
+						<td class="span3" align="left">
+						<form:select path="ass.id" class="input-middle">
+						<form:option value="" label="请选择"/>
+								<form:options items="${listorg}" itemLabel="name"  itemValue="id"
+									htmlEscape="false" />
+							</form:select>
+						<font color="red">*</font></td>
+						<td class="span2" align="center">通道类型:</td>
+						<td class="span3" align="left"><form:select path="type" class="input-middle">
+						<form:option value="" label="请选择"/>
+						<form:option value="应急通道" label="应急通道"/>
+						<form:option value="救援通道" label="救援通道"/>
+						</form:select>
+						</td>
+					</tr>
+					<tr>
+						<td class="span2" align="center">线名:</td>
+						<td class="span3" align="left"><form:input path="lineName"
+								htmlEscape="false" maxlength="50" class="required" />&nbsp;</td>
+						<td class="span2" align="center">桥梁名称:</td>
+						<td class="span3" align="left"><form:input path="name"
+								htmlEscape="false" maxlength="50" class="required" />&nbsp;<font
+							color="red">*</font></td>
+					</tr>
+					<tr>
+						<td class="span2" align="center">通道位置:</td>
+						<td class="span3" align="left"><form:input path="location"
+								htmlEscape="false" maxlength="50" class="required abc" />&nbsp;</td>
+						<td class="span2" align="center">墩号	:</td>
+						<td class="span3" align="left"><form:input path="pierNum"
+								htmlEscape="false" maxlength="50" class="required abc" />&nbsp;<font
+							color="red">*</font></td>
+					</tr>
+					<tr>
+						<td class="span2" align="center">设置位置:</td>
+						<td class="span3" align="left"><form:input path="setPosition"
+								htmlEscape="false" maxlength="50" class="required abc" />&nbsp;<font
+							color="red">*</font></td>
+						<td class="span2" align="center">问题	:</td>
+						<td class="span3" align="left"><form:input path="locationSpan"
+								htmlEscape="false" maxlength="50" class="required abc" />&nbsp;</td>
+					</tr>
+					<tr>
+						<td class="span2" align="center">通道高度:</td>
+						<td class="span3" align="left"><form:input path="height"
+								htmlEscape="false" maxlength="50" class="required abc" />&nbsp;<font
+							color="red">*</font></td>
+						<td class="span2" align="center">采用形式	:</td>
+						<td class="span3" align="left"><form:input path="adoptType"
+								htmlEscape="false" maxlength="50" class="required abc" />&nbsp;<font
+							color="red">*</font></td>
+					</tr>
+
+					
+
+				</tbody>
+				<tfoot>
+					<tr bgcolor="#ffffff">
+						<td colspan="4" align="center"><input id="btnSubmit"
+							class="btn btn-primary" type="submit" value="保 存" />&nbsp; <input
+							id="btnCancel" class="btn" type="button" value="返 回"
+							onclick="history.go(-1)" /></td>
+					</tr>
+				</tfoot>
+			</table>
+		</div>
+	</form:form>
+</body>
+</html>

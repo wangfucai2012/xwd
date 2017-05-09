@@ -1,0 +1,54 @@
+package com.ict.web.modules.inf.nk.web;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.ict.web.commons.web.BaseController;
+import com.ict.web.commons.web.Page;
+import com.ict.web.modules.inf.nk.entity.ContactWireWear;
+import com.ict.web.modules.inf.nk.service.ContactWireWearService;
+
+/**
+ * 
+ *  @description:接触线磨耗检测检修记录Controller
+ *  @author: lutao 
+ *  @create Date:2016年4月30日
+ */
+@Controller
+@RequestMapping(value = "inf/nk/contactwirewear")
+public class ContactWireWearController extends BaseController {
+	@Autowired
+	private ContactWireWearService service;
+	
+	@ModelAttribute
+	public ContactWireWear get(@RequestParam(required = false) Long id){
+		if(id != null){
+			return service.get(id);
+		}else{
+			return new ContactWireWear();
+		}
+	}
+	
+	@RequestMapping(value = { "list", "" })
+	public String list(ContactWireWear entity, HttpServletRequest request, HttpServletResponse response, Model model) {
+		Page<ContactWireWear> page = service.find(new Page<ContactWireWear>(request, response), entity);
+		
+		model.addAttribute("page", page);
+		model.addAttribute("contactWireWear", entity);
+		
+		return "modules/inf/nk/contactWireWearList";
+	}
+	
+	@RequestMapping(value = "view")
+	public String view(ContactWireWear entity, Model model) {
+		model.addAttribute("contactWireWear", entity);
+		return "modules/inf/nk/contactWireWearView";
+	}
+}

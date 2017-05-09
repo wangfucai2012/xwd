@@ -1,0 +1,85 @@
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ include file="/WEB-INF/views/include/taglib.jsp"%>
+<html>
+<head>
+<title>铁跨铁管理</title>
+<meta name="decorator" content="default"/>
+</head>
+<body>
+<ul class="nav nav-tabs">
+		<li><a href="${ctx}/data/work/railwaycrossesrailway?catalog=${railwayCrossesRailway.cat.id}">铁跨铁列表</a></li>
+		<li class="active"><a href="${ctx}/data/work/railwaycrossesrailway?catalog=${railwayCrossesRailway.cat.id}">铁跨铁添加</a></li>
+	</ul><br/>
+	<form:form id="inputForm" modelAttribute="railwayCrossesRailway" action="${ctx}/data/work/railwaycrossesrailway/save" method="post" class="form-horizontal">
+		<form:hidden path="id"/>
+		<form:hidden path="cat.id"/>
+		<sys:message msgcontent="${message}"/>
+		<div class="cs-detial1">
+			<table width="100%" border="0" align="center" cellpadding="0"
+			cellspacing="1" bgcolor="#dddddd" class="table table-striped table-bordered table-hover">
+				<tbody>
+					<tr>
+						<td class="span2" align="center">中心里程:</td>
+						<td class="span3" align="left"><form:input path="centerM" htmlEscape="false" maxlength="50" class="required"/>&nbsp;<font color="red">*</font></td>  
+						<td class="span2" align="center">所属固资卡片:</td>
+						<td class="span3" align="left">
+						<form:select path="ass.id" class="input-middle">
+						<form:option value="" label="请选择"/>
+								<form:options items="${listorg}" itemLabel="name"  itemValue="id"
+									htmlEscape="false" />
+							</form:select>
+						<font color="red">*</font></td>
+					</tr>
+					<tr>
+						<td class="span2" align="center">线名:</td>
+						<td class="span3" align="left"><form:input path="lineName" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+						<td class="span2" align="center">行别:</td>
+						<td class="span3"  align="left"><form:input path="stream" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+					</tr>
+					<tr>
+					    <td class="span2" align="center">桥名:</td>
+						<td class="span3" align="left"><form:input path="bridgeName" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+						<td class="span2" align="center">设备编码:</td>
+						<td class="span3" align="left"><form:input path="ecode" htmlEscape="false" maxlength="50" class="required"/>&nbsp;<font color="red">*</font></td>
+	
+					</tr>
+					<tr>
+					    <td class="span2" align="center">孔跨式样:</td>
+						<td class="span3" align="left"><form:input path="otype" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+						<td class="span2" align="center">区间:</td>
+						<td class="span3" align="left"><form:input path="section" htmlEscape="false" maxlength="50" class="required"/>&nbsp;<font color="red">*</font></td>
+					</tr>
+					<tr>
+					    <td class="span2" align="center">桥下线名:</td>
+						<td class="span3" align="left"><form:input path="downRoadName" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+						<td class="span2" align="center">桥下里程:</td>
+						<td class="span3" align="left"><form:input path="downRoadM" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+					</tr>
+					<tr>
+					    <td class="span2" align="center">穿越桥孔:</td>
+						<td class="span3" align="left"><form:input path="through" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+						<td class="span2" align="center">穿越桥孔中心里程:</td>
+						<td class="span3" align="left"><form:input path="throughCenterM" htmlEscape="false" maxlength="50" class="required"/>&nbsp;<font color="red">*</font></td>
+					</tr>
+					<tr>
+					    <td class="span2" align="center">桥下线路区间:</td>
+						<td class="span3" align="left"><form:input path="downRoadSection" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+						<td class="span2" align="center">备注:</td>
+						<td class="span3" align="left"><form:input path="note" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+					</tr>
+				</tbody>
+				<tfoot>
+					<tr bgcolor="#ffffff">
+						<td colspan="4" align="center">
+							
+									<input id="btnSubmit" class="btn btn-primary" type="submit"
+										value="保 存" />&nbsp;
+							<input id="btnCancel" class="btn" type="button" value="返 回" onclick="history.go(-1)"/>
+						</td>
+					</tr>
+				</tfoot>
+			</table>
+		</div>		
+	</form:form>
+</body>
+</html>

@@ -1,0 +1,439 @@
+package com.ict.web.modules.dataimport.service;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.ict.web.commons.config.Global;
+import com.ict.web.commons.service.BaseService;
+import com.ict.web.commons.utils.DictUtils;
+import com.ict.web.modules.data.comm.dao.BaseStationDao;
+import com.ict.web.modules.data.comm.dao.CableSpliceClosureLocationDao;
+import com.ict.web.modules.data.comm.dao.CameraLocationDao;
+import com.ict.web.modules.data.comm.dao.CommunicationEqDao;
+import com.ict.web.modules.data.comm.dao.EquipmentCabinetDao;
+import com.ict.web.modules.data.comm.dao.IronTowerDao;
+import com.ict.web.modules.data.comm.entity.BaseStation;
+import com.ict.web.modules.data.comm.entity.CableSpliceClosureLocation;
+import com.ict.web.modules.data.comm.entity.CameraLocation;
+import com.ict.web.modules.data.comm.entity.CommunicationEq;
+import com.ict.web.modules.data.comm.entity.EquipmentCabinet;
+import com.ict.web.modules.data.comm.entity.IronTower;
+import com.ict.web.modules.dataimport.urils.AttachUtil;
+import com.ict.web.modules.dataimport.urils.BeanUtil;
+import com.ict.web.modules.dataimport.urils.ExcelUtils;
+import com.ict.web.modules.sys.entity.Attachment;
+import com.ict.web.modules.sys.entity.Catalog;
+import com.ict.web.modules.sys.entity.Dict;
+
+/**
+ * Created by nemo on 16-6-15.
+ */
+@Service
+@Transactional(readOnly = true)
+public class CommDataImportService extends BaseService {
+
+	@Autowired
+	private MCatalogService mCatalogService;
+	
+    /**
+     * 上传文件
+     * @param file
+     * @return
+     * @throws IllegalStateException
+     * @throws IOException
+     */
+    @Transactional(readOnly = false)
+    public Attachment saveUploadFile(MultipartFile file)
+            throws IllegalStateException, IOException {
+        if (file == null) {
+            return null;
+        }
+        String fileToPath = Global.getFileRootPath();
+        Attachment attach = new Attachment();
+        if (!file.isEmpty()) {
+            // 判断目录
+            String saveRelativePath = new DateTime().toString("yyyyMM");
+            String savePath = fileToPath + saveRelativePath;
+            File path = new File(savePath);
+            // 没有路径就直接创建
+            if (!(path.exists() && path.isDirectory())) {
+                path.mkdirs();
+            }
+            // 放到规定目录，用的Spring的自带的transferTo没有用FileUtils（主要是这个类还没写完呢。。。）
+            String saveName = System.currentTimeMillis() + ".xls";
+            file.transferTo(new File(path + "/" + saveName));
+
+            // 然后保存到Attachment
+            String fileSuffix = file.getOriginalFilename().substring(
+                    file.getOriginalFilename().lastIndexOf("."));
+
+            attach.setSaveName(saveName);
+            attach.setSavePath(savePath + "/");
+            attach.setFileName(file.getOriginalFilename());
+            attach.setFileSize(file.getSize());
+            attach.setFileSuffix(fileSuffix);
+            attach.setContentType(file.getContentType());
+            attach.setSaveRelativePath(saveRelativePath + "/");
+            attach.setFileType("upload");
+            //dao.save(attach);
+        }
+        return attach;
+    }
+
+    /**
+     * 获取附件地址
+     * @param attachment
+     * @return
+     * @throws IOException
+     */
+    public String getFilepath(Attachment attachment) throws IOException {
+        if (attachment != null) {
+            File f = new File(attachment.getSavePath() + attachment.getSaveName());
+            if (f.exists()) {
+                return f.getAbsolutePath();
+            }
+        }
+        return null;
+    }
+    
+    //基站数据导入
+    @Autowired
+    private BaseStationDao baseStationDao;
+    public void importBaseStation(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+            
+//          private String name;// 基站名称
+//        	private Integer startK;// 起始里程（公里）
+//        	private Double startM;// 起始里程（米）
+//        	private Integer endK;// 终止里程（公里）
+//        	private Double endM;// 终止里程（米）
+//        	private Catalog cat;//所属类型
+        	
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            
+            ls.add("name");
+            ls.add("centerM");
+            
+            InputStream is = new FileInputStream(AttachUtil.getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Catalog catalog = new Catalog(277L);
+            
+            for(int i=0;i<res.size();i++) {
+            	BaseStation entity = new BaseStation();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                
+                catalog = mCatalogService.getCatalogByCode(entity.getEclsId());
+                if(catalog.getId()!=null){
+                	entity.setCat(catalog);
+                }
+                
+                baseStationDao.clear();
+                baseStationDao.save(entity);
+                baseStationDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+    
+    //铁塔数据导入
+    @Autowired
+    private IronTowerDao ironTowerDao;
+    public void importIronTower(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+            
+//        	private String itName;//铁塔名称
+//        	private String itPurpose;//用途
+//        	private String itHeight;//杆塔高度
+//        	private String latitude;//纬度（北纬）
+//        	private String longitude;//经度（东经）
+        	
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            
+            ls.add("itName");
+            ls.add("centerM");
+            ls.add("type");//铁塔类型
+            ls.add("itPurpose");
+            ls.add("itHeight");
+            ls.add("latitude");
+            ls.add("longitude");
+            
+            InputStream is = new FileInputStream(AttachUtil.getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Catalog catalog = new Catalog(277L);
+            
+            for(int i=0;i<res.size();i++) {
+            	IronTower entity = new IronTower();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                
+                //铁塔类型
+                List<Dict> listdict = DictUtils.getDictList("dic_ironTowerType");
+                String type = (res.get(i).get("type")==null)?"":res.get(i).get("type").toString();
+                for(int l=0;l<listdict.size();l++){
+                	if(type.equals(listdict.get(l).getLabel())){
+                		entity.setDic(listdict.get(l));
+                		break;
+                	}
+                }
+
+                catalog = mCatalogService.getCatalogByCode(entity.getEclsId());
+                if(catalog.getId()!=null){
+                	entity.setCat(catalog);
+                }
+                
+                ironTowerDao.clear();
+                ironTowerDao.save(entity);
+                ironTowerDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+    
+    
+    //摄像头数据导入
+    @Autowired
+    private CameraLocationDao cameraLocationDao;
+    public void importCameraLocation(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+            
+//        	private String location;//地址
+        	
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            
+            ls.add("location");
+            ls.add("centerM");
+            
+            InputStream is = new FileInputStream(AttachUtil.getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            //Catalog catalog = new Catalog(292L);//室内摄像头
+            Catalog catalog = new Catalog(293L);//室外摄像头
+            
+            for(int i=0;i<res.size();i++) {
+            	CameraLocation entity = new CameraLocation();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+
+                catalog = mCatalogService.getCatalogByCode(entity.getEclsId());
+                if(catalog.getId()!=null){
+                	entity.setCat(catalog);
+                }
+                
+                cameraLocationDao.clear();
+                cameraLocationDao.save(entity);
+                cameraLocationDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+    
+    
+    //光缆接头盒位置数据导入
+    @Autowired
+    private CableSpliceClosureLocationDao cableSpliceClosureLocationDao;
+    public void importCableSpliceClosureLocation(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+            
+//        	private String place;//地点
+//        	private String name;//名称
+//        	private String latitude;//纬度（北纬）
+//        	private String longitude;//经度（东经）
+        	
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            
+            ls.add("place");
+            ls.add("name");
+            ls.add("latitude");
+            ls.add("longitude");
+            ls.add("centerM");
+            
+            InputStream is = new FileInputStream(AttachUtil.getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Catalog catalog = new Catalog(759L);
+            
+            for(int i=0;i<res.size();i++) {
+            	CableSpliceClosureLocation entity = new CableSpliceClosureLocation();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                
+                
+                //获取所有的基站类型
+                List<BaseStation> listbase = baseStationDao.findAllList();
+                String place = (res.get(i).get("place")==null)?"":res.get(i).get("place").toString();
+                //循环桥梁数据，匹配数据里面的桥梁数据
+                for(int j=0;j<listbase.size();j++){
+                	if(place.equals(listbase.get(j).getName())){
+                		entity.setBas(listbase.get(j));
+                		break;
+                	}
+                	
+                }
+                
+                catalog = mCatalogService.getCatalogByCode(entity.getEclsId());
+                if(catalog.getId()!=null){
+                	entity.setCat(catalog);
+                }
+                
+                cableSpliceClosureLocationDao.clear();
+                cableSpliceClosureLocationDao.save(entity);
+                cableSpliceClosureLocationDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+    
+    //机柜数据导入
+    @Autowired
+    private EquipmentCabinetDao equipmentCabinetDao;
+    public void importEquipmentCabinet(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+            
+//        	private Long name;//名称
+//        	private Long shortName;//简称
+        	
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            
+            ls.add("place");//所属基站
+            ls.add("name");
+            ls.add("shortName");
+            
+            InputStream is = new FileInputStream(AttachUtil.getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Catalog catalog = new Catalog(270L);
+            
+            for(int i=0;i<res.size();i++) {
+            	EquipmentCabinet entity = new EquipmentCabinet();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+               
+                //获取所有的基站类型
+                List<BaseStation> listbase = baseStationDao.findAllList();
+                String place = (res.get(i).get("place")==null)?"":res.get(i).get("place").toString();
+                //循环桥梁数据，匹配数据里面的桥梁数据
+                for(int j=0;j<listbase.size();j++){
+                	if(place.equals(listbase.get(j).getName())){
+                		entity.setBas(listbase.get(j));
+                		break;
+                	}
+                	
+                }
+                
+                catalog = mCatalogService.getCatalogByCode(entity.getEclsId());
+                if(catalog.getId()!=null){
+                	entity.setCat(catalog);
+                }
+                
+                equipmentCabinetDao.clear();
+                equipmentCabinetDao.save(entity);
+                equipmentCabinetDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+    
+    //机柜数据导入
+    @Autowired
+    private CommunicationEqDao communicationEqDao;
+    public void importCommunicationEq(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+            
+//            private String name;// 设备名称
+//            private String  maker;// 生产厂家
+//            private String  types;// 型号
+//            private String  units;// 单位
+//            private String  counts;// 数量
+//            private String  capacity;// 容量
+//            private String  infact;// 实用量
+//        	private Catalog cat;//所属类型
+//        	private BaseStation bs;//所属基站
+//        	private String steam;//行别（上下行）
+//            private String rackNum;//机架号
+        	
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            
+            ls.add("place");//所属基站
+            ls.add("name");
+            ls.add("maker");
+            ls.add("rackNum");
+            ls.add("types");
+            ls.add("units");
+            ls.add("counts");
+            ls.add("capacity");
+            ls.add("infact");
+            
+            InputStream is = new FileInputStream(AttachUtil.getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Catalog catalog = new Catalog(270L);
+            
+            for(int i=0;i<res.size();i++) {
+            	CommunicationEq entity = new CommunicationEq();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+               
+                //获取所有的基站类型
+                List<BaseStation> listbase = baseStationDao.findAllList();
+                String place = (res.get(i).get("place")==null)?"":res.get(i).get("place").toString();
+                //循环桥梁数据，匹配数据里面的桥梁数据
+                for(int j=0;j<listbase.size();j++){
+                	if(place.equals(listbase.get(j).getName())){
+                		entity.setBs(listbase.get(j));
+                		break;
+                	}
+                	
+                }
+                
+                catalog = mCatalogService.getCatalogByCode(entity.getEclsId());
+                if(catalog.getId()!=null){
+                	entity.setCat(catalog);
+                }
+                
+                communicationEqDao.clear();
+                communicationEqDao.save(entity);
+                communicationEqDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+    
+}

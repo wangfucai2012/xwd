@@ -1,0 +1,574 @@
+package com.ict.web.modules.dataimport.web;
+
+import com.ict.web.commons.web.BaseController;
+import com.ict.web.modules.dataimport.service.DataImportService;
+import com.ict.web.modules.sys.entity.Attachment;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+
+import javax.servlet.http.HttpServletRequest;
+
+/**
+ * 数据导入接口
+ * Created by nemo on 16-6-15.
+ */
+@Controller
+@RequestMapping(value = "dataimport")
+public class DataImportController extends BaseController {
+
+    @Autowired
+    private DataImportService service;
+
+    /**
+     * 隧道数据导入
+     * @return
+     */
+    @RequestMapping(value = "tunel")
+    private String tunel(){
+        return "modules/dataimport/tunel";
+    }
+
+    @RequestMapping(value = "importTunel")
+    private String importTunel(HttpServletRequest request){
+        MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+        try {
+            // 开始上传文件
+            MultipartFile file = a.getFile("pierfile");
+            Attachment atts = service.saveUploadFile(file);
+
+            service.importTunel(atts);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "redirect:/dataimport/tunel";
+    }
+
+    /**
+     * 涵洞数据
+     * @return
+     */
+    @RequestMapping(value = "culvert")
+    public String culvert(){
+        return "modules/dataimport/culvert";
+    }
+
+    @RequestMapping(value = "importCulvert")
+    private String importCulvert(HttpServletRequest request){
+        MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+        try {
+            // 开始上传文件
+            MultipartFile file = a.getFile("pierfile");
+            Attachment atts = service.saveUploadFile(file);
+
+            service.importCulvert(atts);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "redirect:/dataimport/culvert";
+    }
+
+    /**
+     * 路基防护
+     * @return
+     */
+    @RequestMapping(value = "subgradProtect")
+    public String subgradProtect(){
+        return "modules/dataimport/subgradProtect";
+    }
+
+    @RequestMapping(value = "importSubgradProtect")
+    private String importSubgradProtect(HttpServletRequest request){
+        MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+        try {
+            // 开始上传文件
+            MultipartFile file = a.getFile("pierfile");
+            Attachment atts = service.saveUploadFile(file);
+
+            service.importSubgradeProtact(atts);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "redirect:/dataimport/subgradProtect";
+    }
+
+    /**
+     * 路基排水
+     * @return
+     */
+    @RequestMapping(value = "subgradeDrainage")
+    public String subgradeDrainage(){
+        return "modules/dataimport/subgradeDrainage";
+    }
+
+    @RequestMapping(value = "importSubgradeDrainage")
+    private String importSubgradeDrainage(HttpServletRequest request){
+        MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+        try {
+            // 开始上传文件
+            MultipartFile file = a.getFile("pierfile");
+            Attachment atts = service.saveUploadFile(file);
+
+            service.importSubgradeDrainage(atts);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "redirect:/dataimport/subgradeDrainage";
+    }
+
+    /**
+     * 路基排水
+     * @return
+     */
+    @RequestMapping(value = "subgrade")
+    public String subgrade(){
+        return "modules/dataimport/subgrade";
+    }
+
+    @RequestMapping(value = "importSubgrade")
+    private String importSubgrade(HttpServletRequest request){
+        MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+        try {
+            // 开始上传文件
+            MultipartFile file = a.getFile("pierfile");
+            Attachment atts = service.saveUploadFile(file);
+
+            service.importSubgrade(atts);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "redirect:/dataimport/subgrade";
+    }
+
+    /**
+     * 钢轨
+     * @return
+     */
+    @RequestMapping(value = "steelRail")
+    public String steelRail(){
+        return "modules/dataimport/steelRail";
+    }
+
+    @RequestMapping(value = "importSteelRail")
+    private String importSteelRail(HttpServletRequest request){
+        MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+        try {
+            // 开始上传文件
+            MultipartFile file = a.getFile("pierfile");
+            Attachment atts = service.saveUploadFile(file);
+
+            service.importSteelRail(atts);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "redirect:/dataimport/steelRail";
+    }
+
+    /**
+     * 路基排水
+     * @return
+     */
+    @RequestMapping(value = "sleeper")
+    public String sleeper(){
+        return "modules/dataimport/sleeper";
+    }
+
+    @RequestMapping(value = "importSleeper")
+    private String importSleeper(HttpServletRequest request){
+        MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+        try {
+            // 开始上传文件
+            MultipartFile file = a.getFile("pierfile");
+            Attachment atts = service.saveUploadFile(file);
+
+            service.importSleeper(atts);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "redirect:/dataimport/sleeper";
+    }
+
+    /**
+     * 安保区标桩
+     * @return
+     */
+    @RequestMapping(value = "securityZoneSigns")
+    public String securityZoneSigns(){
+        return "modules/dataimport/securityZoneSigns";
+    }
+
+    @RequestMapping(value = "importSecurityZoneSigns")
+    private String importSecurityZoneSigns(HttpServletRequest request){
+        MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+        try {
+            // 开始上传文件
+            MultipartFile file = a.getFile("pierfile");
+            Attachment atts = service.saveUploadFile(file);
+
+            service.importSecurityZoneSigns(atts);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "redirect:/dataimport/securityZoneSigns";
+    }
+
+    /**
+     * 公铁并行
+     * @return
+     */
+    @RequestMapping(value = "roadRailParallel")
+    public String roadRailParallel(){
+        return "modules/dataimport/roadRailParallel";
+    }
+
+    @RequestMapping(value = "importRoadRailParallel")
+    private String importRoadRailParallel(HttpServletRequest request){
+        MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+        try {
+            // 开始上传文件
+            MultipartFile file = a.getFile("pierfile");
+            Attachment atts = service.saveUploadFile(file);
+
+            service.importRoadRailParallel(atts);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "redirect:/dataimport/roadRailParallel";
+    }
+
+    /**
+     * 屏障
+     * @return
+     */
+    @RequestMapping(value = "barrier")
+    public String bBarrierarrier(){
+        return "modules/dataimport/barrier";
+    }
+
+    @RequestMapping(value = "importBarrier")
+    private String importBarrier(HttpServletRequest request){
+        MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+        try {
+            // 开始上传文件
+            MultipartFile file = a.getFile("pierfile");
+            Attachment atts = service.saveUploadFile(file);
+
+            service.importBarrier(atts);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "redirect:/dataimport/barrier";
+    }
+
+    /**
+     * 管线
+     * @return
+     */
+    @RequestMapping(value = "pipelines")
+    public String pipelines(){
+        return "modules/dataimport/pipelines";
+    }
+
+    @RequestMapping(value = "importPipelines")
+    private String importPipelines(HttpServletRequest request){
+        MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+        try {
+            // 开始上传文件
+            MultipartFile file = a.getFile("pierfile");
+            Attachment atts = service.saveUploadFile(file);
+
+            service.importPipelines(atts);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "redirect:/dataimport/pipelines";
+    }
+
+    /**
+     * 铁跨铁
+     * @return
+     */
+    @RequestMapping(value = "railwayCrossesRailway")
+    public String railwayCrossesRailway(){
+        return "modules/dataimport/railwayCrossesRailway";
+    }
+
+    @RequestMapping(value = "importRailwayCrossesRailway")
+    private String importRailwayCrossesRailway(HttpServletRequest request){
+        MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+        try {
+            // 开始上传文件
+            MultipartFile file = a.getFile("pierfile");
+            Attachment atts = service.saveUploadFile(file);
+
+            service.importRailwayCrossesRailway(atts);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "redirect:/dataimport/railwayCrossesRailway";
+    }
+
+    /**
+     * 限高防护架
+     * @return
+     */
+    @RequestMapping(value = "heightLimitProFrame")
+    public String heightLimitProFrame(){
+        return "modules/dataimport/heightLimitProFrame";
+    }
+
+    @RequestMapping(value = "importHeightLimitProFrame")
+    private String importHeightLimitProFrame(HttpServletRequest request){
+        MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+        try {
+            // 开始上传文件
+            MultipartFile file = a.getFile("pierfile");
+            Attachment atts = service.saveUploadFile(file);
+
+            service.importHeightLimitProFrame(atts);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "redirect:/dataimport/heightLimitProFrame";
+    }
+
+    /**
+     * 应急疏散通道
+     * @return
+     */
+    @RequestMapping(value = "corridor")
+    public String corridor(){
+        return "modules/dataimport/corridor";
+    }
+
+    @RequestMapping(value = "importCorridor")
+    private String importCorridor(HttpServletRequest request){
+        MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+        try {
+            // 开始上传文件
+            MultipartFile file = a.getFile("pierfile");
+            Attachment atts = service.saveUploadFile(file);
+
+            service.importCorridor(atts);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "redirect:/dataimport/corridor";
+    }
+
+    /**
+     * 栅栏门
+     * @return
+     */
+    @RequestMapping(value = "fenceGate")
+    public String fenceGate(){
+        return "modules/dataimport/fenceGate";
+    }
+
+    @RequestMapping(value = "importFenceGate")
+    private String importFenceGate(HttpServletRequest request){
+        MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+        try {
+            // 开始上传文件
+            MultipartFile file = a.getFile("pierfile");
+            Attachment atts = service.saveUploadFile(file);
+
+            service.importFenceGate(atts);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "redirect:/dataimport/fenceGate";
+    }
+
+    /**
+     * 栅栏
+     * @return
+     */
+    @RequestMapping(value = "fence")
+    public String fence(){
+        return "modules/dataimport/fence";
+    }
+
+    @RequestMapping(value = "importFence")
+    private String importFence(HttpServletRequest request){
+        MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+        try {
+            // 开始上传文件
+            MultipartFile file = a.getFile("pierfile");
+            Attachment atts = service.saveUploadFile(file);
+
+            service.importFence(atts);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "redirect:/dataimport/fence";
+    }
+
+    /**
+     * 墩台
+     * @return
+     */
+    @RequestMapping(value = "pier")
+    public String pier(){
+        return "modules/dataimport/pier";
+    }
+
+    @RequestMapping(value = "importPier")
+    private String importPier(HttpServletRequest request){
+        MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+        try {
+            // 开始上传文件
+            MultipartFile file = a.getFile("pierfile");
+            Attachment atts = service.saveUploadFile(file);
+
+            service.importPier(atts);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "redirect:/dataimport/pier";
+    }
+    
+    /**
+     * 墩台
+     * @return
+     */
+    @RequestMapping(value = "grider")
+    public String grider(){
+        return "modules/dataimport/grider";
+    }
+    @RequestMapping(value = "importGrider")
+    private String importGrider(HttpServletRequest request){
+        MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+        try {
+            // 开始上传文件
+            MultipartFile file = a.getFile("pierfile");
+            Attachment atts = service.saveUploadFile(file);
+
+            service.importGrider(atts);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "redirect:/dataimport/grider";
+    }
+    
+    /**
+    * 承台
+    * @return
+    */
+   @RequestMapping(value = "bearingplatform")
+   public String bearingplatform(){
+       return "modules/dataimport/bearingplatform";
+   }
+
+   @RequestMapping(value = "importBearingplatform")
+   private String importBearingplatform(HttpServletRequest request){
+       MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+       try {
+           // 开始上传文件
+           MultipartFile file = a.getFile("pierfile");
+           Attachment atts = service.saveUploadFile(file);
+
+           service.importBearingplatform(atts);
+
+       }catch (Exception e){
+           e.printStackTrace();
+       }
+       return "redirect:/dataimport/bearingplatform";
+   }
+   
+   /**
+   * 桩基
+   * @return
+   */
+  @RequestMapping(value = "pile")
+  public String pile(){
+      return "modules/dataimport/pile";
+  }
+
+  @RequestMapping(value = "importPile")
+  private String importPile(HttpServletRequest request){
+      MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+      try {
+          // 开始上传文件
+          MultipartFile file = a.getFile("pierfile");
+          Attachment atts = service.saveUploadFile(file);
+
+          service.importPile(atts);
+
+      }catch (Exception e){
+          e.printStackTrace();
+      }
+      return "redirect:/dataimport/pile";
+  }
+  
+  /**
+  * 精密控制网
+  * @return
+  */
+ @RequestMapping(value = "precisecontnet")
+ public String precisecontnet(){
+     return "modules/dataimport/precisecontnet";
+ }
+
+ @RequestMapping(value = "importPrecisecontnet")
+ private String importPrecisecontnet(HttpServletRequest request){
+     MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+     try {
+         // 开始上传文件
+         MultipartFile file = a.getFile("pierfile");
+         Attachment atts = service.saveUploadFile(file);
+
+         service.importPrecisecontnet(atts);
+
+     }catch (Exception e){
+         e.printStackTrace();
+     }
+     return "redirect:/dataimport/precisecontnet";
+ }
+  
+  /**
+  * 综合自动化装置
+  * @return
+  */
+ @RequestMapping(value = "comautoeq")
+ public String comautoeq(){
+     return "modules/dataimport/electricity/comautoeq";
+ }
+
+ @RequestMapping(value = "importComautoeq")
+ private String importComautoeq(HttpServletRequest request){
+     MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+     try {
+         // 开始上传文件
+         MultipartFile file = a.getFile("pierfile");
+         Attachment atts = service.saveUploadFile(file);
+
+         service.importComautoeq(atts);
+
+     }catch (Exception e){
+         e.printStackTrace();
+     }
+     return "redirect:/dataimport/comautoeq";
+ }
+   
+}

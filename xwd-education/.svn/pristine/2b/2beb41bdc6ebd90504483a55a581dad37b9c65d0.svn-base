@@ -1,0 +1,42 @@
+package com.ict.web.modules.assetcard.utils;
+
+import com.google.common.collect.Lists;
+import com.ict.web.commons.utils.SpringContextHolder;
+import com.ict.web.modules.assetcard.entity.AssetCard;
+import com.ict.web.modules.assetcard.service.AssetCardServices;
+
+import java.util.List;
+
+/**
+ * 固资卡片工具类
+ * Created by nemo on 16-5-26.
+ */
+public class AssetcardUtil {
+
+    private static AssetCardServices service = SpringContextHolder.getBean(AssetCardServices.class);
+
+    /**
+     * 对外提供的获取固资卡片列表的方法
+     * @param catalogId 固资卡片所属的目录
+     * @return
+     */
+    public static List<AssetCard> getAssetCardList(String  catalogId){
+        if (catalogId == null){
+           return Lists.newArrayList();
+        }
+        else{
+            Long catalog;
+            try{
+                catalog  = Long.parseLong(catalogId);
+            }catch (Exception e){
+                return Lists.newArrayList();
+            }
+            List<AssetCard> res = service.getByCatalog(catalog);
+            if(res==null || res.size()<=0){
+            	res = Lists.newArrayList();
+            }
+            return res;
+        }
+    }
+
+}

@@ -1,0 +1,55 @@
+package com.ict.web.modules.inf.nk.web;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.ict.web.commons.web.BaseController;
+import com.ict.web.commons.web.Page;
+import com.ict.web.modules.inf.nk.entity.InfSection;
+import com.ict.web.modules.inf.nk.service.InfSectionService;
+
+
+/**
+ * 
+ *  @description:区间Controller
+ *  @author: lutao 
+ *  @create Date:2016年4月23日
+ */
+@Controller
+@RequestMapping(value = "inf/nk/infsection")
+public class InfSectionController extends BaseController {
+	@Autowired
+	private InfSectionService service;
+	
+	@ModelAttribute
+	public InfSection get(@RequestParam(required = false) Long id){
+		if(id != null){
+			return service.get(id);
+		}else{
+			return new InfSection();
+		}
+	}
+	
+	@RequestMapping(value = { "list", "" })
+	public String list(InfSection entity, HttpServletRequest request, HttpServletResponse response, Model model) {
+		Page<InfSection> page = service.find(new Page<InfSection>(request, response), entity);
+		
+		model.addAttribute("page", page);
+		model.addAttribute("infSection", entity);
+		
+		return "modules/inf/nk/infSectionList";
+	}
+	
+	@RequestMapping(value = "view")
+	public String view(InfSection entity, Model model) {
+		model.addAttribute("infSection", entity);
+		return "modules/inf/nk/infSectionView";
+	}
+}

@@ -1,0 +1,231 @@
+<%--
+  Created by IntelliJ IDEA.
+  User: nemo
+  Date: 16-5-24
+  Time: 下午2:54
+  To change this template use File | Settings | File Templates.
+--%>
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ include file="/WEB-INF/views/include/taglib.jsp"%>
+<html>
+<head>
+    <title>管理系统</title>
+    <meta name="decorator" content="default"/>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#loginName").focus();
+            $("#inputForm").validate({
+                submitHandler: function(form){
+                    loading('正在提交，请稍等...');
+                    form.submit();
+                },
+                errorContainer: "#messageBox",
+                errorPlacement: function(error, element) {
+                    $("#messageBox").text("输入有误，请先更正。");
+                    if (element.is(":checkbox")||element.is(":radio")||element.parent().is(".input-append")){
+                        error.appendTo(element.parent().parent());
+                    } else {
+                        error.insertAfter(element);
+                    }
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+
+<ul class="nav nav-tabs">
+    <li><a href="${ctx}/device/electricity/cne/basicNetBar?catalog=${catalog}">设备列表</a></li>
+    <li  class="active"><a href="${ctx}/device/electricity/cne/basicNetBar/form?catalog=${catalog}">设备添加</a></li>
+</ul>
+
+<form:form id="inputForm" modelAttribute="basicNetBar" action="${ctx}/device/electricity/cne/basicNetBar/save?catalog=${catalog}" method="post">
+    <form:hidden path="id"/>
+    <sys:message msgcontent="${message}"/>
+    <input type="hidden" name="catalog" value="${catalog}">
+    <div class="cs-detail">
+        <table class="table table-striped table-bordered table-hover">
+            <tbody>
+            <tr>
+                <td class="span2">所属供电区间:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:select path="powerSupplySection.id" class="required">
+                        <form:option value="" label="请选择" />
+                        <form:options items="${fns:getPowerSupplySectionList()}" itemLabel="name" itemValue="id" htmlEscape="false"  />
+                    </form:select>
+                </td>
+                <td class="span2">所属支柱:</td>
+                <td class="span3">
+                    <form:input path="pole" htmlEscape="false" maxlength="50" class="required"/>
+                </td>
+            </tr>
+            <tr>
+                <td class="span2">所属固资卡片:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:select path="assetCard.id" class="required">
+                        <form:option value="" label="请选择"/>
+                        <form:options items="${fns:getAssetCardList(catalog)}" itemLabel="name" itemValue="id" htmlEscape="false"/>
+                    </form:select>
+                </td>
+                <td class="span2">所属工区:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:select path="netElectricalArea.id" class="required">
+                        <form:option value="" label="请选择"/>
+                        <form:options items="${fns:getNetElectricalAreaList()}" itemLabel="name" itemValue="id" htmlEscape="false"/>
+                    </form:select>
+                </td>
+                <%--<td class="span2">所属部门:</td>--%>
+                <%--<td class="span3" style="text-align: left;">--%>
+                    <%--<sys:treeselect id="offce" name="office.id" value="${entity.office.id}" labelName="office.name" labelValue="${entity.office.name}"--%>
+                                    <%--title="部门" url="/sys/office/treeData?type=2" cssClass="required"/>--%>
+                <%--</td>--%>
+            </tr>
+            <tr>
+                <td class="span2">设备编码:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="equipCode" htmlEscape="false" maxlength="50" class="required"/>
+                </td>
+                <td class="span2">股道号:</td>
+                <td class="span3">
+                    <form:input path="trackNumber" htmlEscape="false" maxlength="50" class="required"/>
+                </td>
+            </tr>
+            <tr>
+                <td class="span2">线路条件:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="line" htmlEscape="false" maxlength="50" class="required"/>
+                </td>
+                <td class="span2">路面平面布置:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="levelLayout" htmlEscape="false" maxlength="50" class="required"/>
+                </td>
+            </tr>
+            <tr>
+                <td class="span2">跨距:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="span" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+                <td class="span2">侧面限界:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="slopeLimit" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+            </tr>
+            <tr>
+                <td class="span2">外轨超高:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="outHeight" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+                <td class="span2">接触悬挂:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="touchSuspension" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+            </tr>
+            <tr>
+                <td class="span2">AF线:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="afLine" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+                <td class="span2">PW(回流)线:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="pwLine" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+            </tr>
+            <tr>
+                <td class="span2">jq线:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="jqLine" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+                <td class="span2">供电线:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="supplierLine" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+            </tr>
+            <tr>
+                <td class="span2">吸上线:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="suckLine" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+                <td class="span2">隔离开关:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="insulateSwitch" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+            </tr>
+            <tr>
+                <td class="span2">避雷器:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="lightProtected" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+                <td class="span2">分段绝缘器:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="segInsulation" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+            </tr>
+            <tr>
+                <td class="span2">分相绝缘器:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="phaseInsulation" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+                <td class="span2">下锚装置:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="downAnchor" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+            </tr>
+            <tr>
+                <td class="span2">标志牌:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="brand" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+                <td class="span2">拉出值北京侧:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="pulloutBei" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+            </tr>
+            <tr>
+                <td class="span2">拉出值中间侧:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="pulloutMiddle" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+                <td class="span2">拉出值上海侧:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="pulloutShang" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+            </tr>
+            <tr>
+                <td class="span2">设计导高北京侧:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="heightBei" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+                <td class="span2">设计导高中间侧:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="heightMiddle" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+            </tr>
+            <tr>
+                <td class="span2">设计导高上海侧:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="heightShang" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+                <td class="span2">NFC标签:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="nfcCode" htmlEscape="false" maxlength="100" class="required"/>
+                </td>
+            </tr>
+            <tr>
+          		<td class="span2">所属机构:</td>
+				<td class="span3" align="left">
+				<sys:treeselect id="office" name="offc.id" value="${offc.id}" labelName="offc.name" labelValue="${basicNetBar.offc.name}"
+					title="机构" url="/sys/office/treeData" extId="${office.id}" cssClass="required"/>
+				</td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <shiro:hasPermission name="sys:user:edit"><input id="btnSubmit" class="btn btn-primary" type="submit" value="保 存"/>&nbsp;</shiro:hasPermission>
+                    <input id="btnCancel" class="btn" type="button" value="返 回" onclick="history.go(-1)"/>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</form:form>
+</body>
+</html>

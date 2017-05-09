@@ -1,0 +1,118 @@
+package com.web.modules.sys.web.dict;
+
+import com.google.common.collect.Lists;
+import com.web.commons.config.Global;
+import com.web.commons.web.BaseController;
+import com.web.commons.web.Page;
+import com.web.modules.sys.entity.dict.Line;
+import com.web.modules.sys.service.dict.LineService;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springside.modules.mapper.JsonMapper;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
+
+/**
+ * 更改，去掉无意义的施工外键关联
+ * 
+ * @author nanxiaoqiang
+ * 
+ * @version 2014年6月7日
+ * 
+ */
+@Controller
+@RequestMapping(value = "sys/dic/line")
+public class LineController extends BaseController {
+	@Autowired
+	private LineService lineService;
+
+	@ModelAttribute
+	public Line get(@RequestParam(required = false) Long id) {
+		if (id != null) {
+			return lineService.get(id);
+		} else {
+			Line entity = new Line();
+			return entity;
+		}
+	}
+
+	@RequiresPermissions("sys:dic:line:view")
+	@RequestMapping(value = { "list", "" })
+	public String list(Line entity, HttpServletRequest request,
+                       HttpServletResponse response, Model model) {
+		Page<Line> page = lineService.find(new Page<Line>(request, response),
+				entity, true);
+		model.addAttribute("page", page);
+		return "modules/sys/dic/lineList";
+	}
+
+	@RequiresPermissions("sys:dic:line:edit")
+	@RequestMapping(value = "form")
+	public String form(Line entity, Model model) {
+		model.addAttribute("line", entity);
+		return "modules/sys/dic/lineForm";
+	}
+
+	@RequiresPermissions("sys:dic:line:view")
+	@RequestMapping(value = "view")
+	public String view(Line entity, Model model) {
+		model.addAttribute("line", entity);
+		return "modules/sys/dic/lineView";
+	}
+
+	@RequiresPermissions("sys:dic:line:edit")
+	@RequestMapping(value = "save")
+	public String save(Line entity, Model model,
+                       RedirectAttributes redirectAttributes, HttpServletRequest request)
+			throws IllegalStateException, IOException {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/sys/dic/lineView";
+		}
+		if (!beanValidator(model, entity)) {
+			return form(entity, model);
+		}
+
+		lineService.save(entity);
+		addMessage(redirectAttributes, "保存线路" + entity.getName() + "'成功");
+		return "redirect:/sys/dic/line";
+	}
+
+	@RequiresPermissions("sys:dic:line:edit")
+	@RequestMapping(value = "deleteMulti")
+	public String deleteMulti(@RequestParam String assembleDelId,
+			RedirectAttributes redirectAttributes) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/sys/dic/line/?repage";// "+Global.getAdminPath()+"
+		}
+		lineService.deleteMulti(assembleDelId);
+		addMessage(redirectAttributes, "删除所选线路成功");
+		return "redirect:/sys/dic/line/?repage";//
+	}
+	
+	@RequestMapping(value = { "getLineByAjax" })
+	public @ResponseBody String getLineByAjax(){
+		List<Line> jsonlist=Lists.newArrayList();
+		List<Line> linelist=lineService.findAll();
+		for(int i=0;i<linelist.size();i++){
+			Line e=new Line();
+			Long lineid=linelist.get(i).getId();
+			e.setId(lineid);
+			e.setName(linelist.get(i).getName())	;
+			jsonlist.add(e);
+		}
+		return JsonMapper.nonDefaultMapper().toJson(jsonlist);
+	}
+	
+}

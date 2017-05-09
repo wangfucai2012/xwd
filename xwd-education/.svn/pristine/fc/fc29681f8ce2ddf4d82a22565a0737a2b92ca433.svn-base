@@ -1,0 +1,113 @@
+package com.ict.web.modules.data.work.web;
+
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.ict.web.commons.config.Global;
+import com.ict.web.commons.web.BaseController;
+import com.ict.web.commons.web.Page;
+import com.ict.web.modules.data.work.entity.SubgradeProtect;
+import com.ict.web.modules.data.work.service.SubgradeProtectService;
+import com.ict.web.modules.sys.entity.Catalog;
+import com.ict.web.modules.sys.service.CatalogService;
+
+
+
+
+/**
+ * 
+ *  @description:路基防护
+ *  @author:wangjianwei 
+ *  @create Date:2016年4月25日 下午2:49:37
+ */
+@Controller
+@RequestMapping(value = "data/work/subgradeprotect")
+public class SubgradeProtectController extends BaseController {
+	@Autowired
+	private CatalogService catalogService;
+	@Autowired
+	SubgradeProtectService subgradeProtectService;
+
+	@ModelAttribute
+	public SubgradeProtect get(@RequestParam(required = false) Long id) {
+		if (id != null) {
+			return subgradeProtectService.get(id);
+		} else {
+			return new SubgradeProtect();
+		}
+	}
+
+	@RequiresPermissions("data:work:subgradeprotect:view")
+	@RequestMapping(value = { "list", "" })
+	public String list(SubgradeProtect entity, HttpServletRequest request,
+			HttpServletResponse response, Model model,@RequestParam(required = false) Long catalog) {
+		Page<SubgradeProtect> page = subgradeProtectService.find(new Page<SubgradeProtect>(request, response),
+				entity,catalog);
+		model.addAttribute("page", page);
+		if(catalog!=null){			
+			Catalog cat = catalogService.getById(catalog);
+			entity.setCat(cat);
+		}
+		model.addAttribute("subgradeProtect", entity);
+		return "modules/data/work/subgradeProtectList";
+	}
+
+	@RequiresPermissions("data:work:subgradeprotect:view")
+	@RequestMapping(value = "form")
+	public String form(SubgradeProtect entity, Model model,@RequestParam(required = false) Long catalog) {
+		if(catalog!=null){			
+			Catalog cat = catalogService.getById(catalog);
+			entity.setCat(cat);
+		}
+		model.addAttribute("subgradeProtect", entity);
+		return "modules/data/work/subgradeProtectForm";
+	}
+	
+	@RequiresPermissions("data:work:subgradeprotect:view")
+	@RequestMapping(value = "view")
+	public String view(SubgradeProtect entity, Model model) {
+		model.addAttribute("subgradeProtect", entity);
+		return "modules/data/work/subgradeProtectView";
+	}
+
+	@RequiresPermissions("data:work:subgradeprotect:edit")
+	@RequestMapping(value = "save")
+	// @Valid
+	public String save(SubgradeProtect entity, Model model,
+			RedirectAttributes redirectAttributes) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/data/work/subgradeprotect/?repage";// "+Global.getAdminPath()+"
+		}
+		if (!beanValidator(model, entity)) {
+			return form(entity, model,entity.getCat().getId());
+		}
+		subgradeProtectService.save(entity);
+		addMessage(redirectAttributes, "保存成功");
+		return "redirect:/data/work/subgradeprotect/?repage";// "+Global.getAdminPath()+"
+	}
+
+	@RequiresPermissions("data:work:subgradeprotect:edit")
+	@RequestMapping(value = "deleteMulti")
+    public String deleteMulti(@RequestParam String assembleDelId, RedirectAttributes redirectAttributes) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/data/work/subgradeprotect/?repage";// "+Global.getAdminPath()+"
+		}
+		subgradeProtectService.deleteMulti(assembleDelId);
+		addMessage(redirectAttributes, "删除成功");
+		return "redirect:/data/work/subgradeprotect/?repage";// "+Global.getAdminPath()+"
+	}
+
+	
+}

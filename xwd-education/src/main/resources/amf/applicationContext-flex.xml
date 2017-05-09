@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc" xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+
+	xmlns:graniteds="http://www.graniteds.org/config"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.0.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-4.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+		http://www.graniteds.org/config
+		http://www.graniteds.org/public/dtd/3.0.0/granite-config-3.0.xsd"
+	default-lazy-init="true">
+	<!-- 最上方因为采用GraniteDS加入了xmlns:graniteds="http://www.graniteds.org/config" -->
+	<description>Spring集成Flex的配置放这里</description>
+	
+	<!-- tag::graniteds-config[] -->
+	<graniteds:server-filter url-pattern="/*"/>
+    <!-- end::graniteds-config[] -->
+
+</beans>

@@ -1,0 +1,1680 @@
+package com.ict.web.modules.dataimport.service;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.ict.web.commons.config.Global;
+import com.ict.web.commons.service.BaseService;
+import com.ict.web.commons.utils.DictUtils;
+import com.ict.web.modules.data.work.dao.BarrierDao;
+import com.ict.web.modules.data.work.dao.BearingPlatformDao;
+import com.ict.web.modules.data.work.dao.BridgeDao;
+import com.ict.web.modules.data.work.dao.CorridorDao;
+import com.ict.web.modules.data.work.dao.CulvertDao;
+import com.ict.web.modules.data.work.dao.FenceDao;
+import com.ict.web.modules.data.work.dao.FenceGateDao;
+import com.ict.web.modules.data.work.dao.GriderDao;
+import com.ict.web.modules.data.work.dao.HeightLimitProFrameDao;
+import com.ict.web.modules.data.work.dao.PierDao;
+import com.ict.web.modules.data.work.dao.PileDao;
+import com.ict.web.modules.data.work.dao.PipelinesDao;
+import com.ict.web.modules.data.work.dao.PreciseControlNetDao;
+import com.ict.web.modules.data.work.dao.RailwayCrossesRailwayDao;
+import com.ict.web.modules.data.work.dao.RoadRailParallelDao;
+import com.ict.web.modules.data.work.dao.SecurityZoneSignsDao;
+import com.ict.web.modules.data.work.dao.SleeperDao;
+import com.ict.web.modules.data.work.dao.SteelRailDao;
+import com.ict.web.modules.data.work.dao.SubgradeDao;
+import com.ict.web.modules.data.work.dao.SubgradeDrainageDao;
+import com.ict.web.modules.data.work.dao.SubgradeProtectDao;
+import com.ict.web.modules.data.work.dao.TunnelDao;
+import com.ict.web.modules.data.work.entity.Barrier;
+import com.ict.web.modules.data.work.entity.BearingPlatform;
+import com.ict.web.modules.data.work.entity.Bridge;
+import com.ict.web.modules.data.work.entity.Corridor;
+import com.ict.web.modules.data.work.entity.Culvert;
+import com.ict.web.modules.data.work.entity.Fence;
+import com.ict.web.modules.data.work.entity.FenceGate;
+import com.ict.web.modules.data.work.entity.Grider;
+import com.ict.web.modules.data.work.entity.HeightLimitProFrame;
+import com.ict.web.modules.data.work.entity.Pier;
+import com.ict.web.modules.data.work.entity.Pile;
+import com.ict.web.modules.data.work.entity.Pipelines;
+import com.ict.web.modules.data.work.entity.PreciseControlNet;
+import com.ict.web.modules.data.work.entity.RailwayCrossesRailway;
+import com.ict.web.modules.data.work.entity.RoadRailParallel;
+import com.ict.web.modules.data.work.entity.SecurityZoneSigns;
+import com.ict.web.modules.data.work.entity.Sleeper;
+import com.ict.web.modules.data.work.entity.SteelRail;
+import com.ict.web.modules.data.work.entity.Subgrade;
+import com.ict.web.modules.data.work.entity.SubgradeDrainage;
+import com.ict.web.modules.data.work.entity.SubgradeProtect;
+import com.ict.web.modules.data.work.entity.Tunnel;
+import com.ict.web.modules.dataimport.urils.BeanUtil;
+import com.ict.web.modules.dataimport.urils.ExcelUtils;
+import com.ict.web.modules.data.electricity.dao.tem.ComautoeqDao;
+import com.ict.web.modules.data.electricity.entity.tem.Comautoeq;
+import com.ict.web.modules.sys.entity.Attachment;
+import com.ict.web.modules.sys.entity.Catalog;
+import com.ict.web.modules.sys.entity.Dict;
+import com.ict.web.modules.sys.entity.dict.Line;
+
+/**
+ * Created by nemo on 16-6-15.
+ */
+@Service
+@Transactional(readOnly = true)
+public class DataImportService extends BaseService {
+
+    @Autowired
+    private BridgeDao bridgeDao;
+    @Autowired
+    private TunnelDao tunnelDao;
+    @Autowired
+    private CulvertDao culvertDao;
+    @Autowired
+    private SubgradeProtectDao subgradeProtectDao;
+    @Autowired
+    private SubgradeDrainageDao subgradeDrainageDao;
+    @Autowired
+    private SubgradeDao subgradeDao;
+    @Autowired
+    private SteelRailDao steelRailDao;
+    @Autowired
+    private SleeperDao sleeperDao;
+    @Autowired
+    private SecurityZoneSignsDao securityZoneSignsDao;
+    @Autowired
+    private RoadRailParallelDao roadRailParallelDao;
+    @Autowired
+    private BarrierDao barrierDao;
+    @Autowired
+    private PipelinesDao pipelinesDao;
+    @Autowired
+    private RailwayCrossesRailwayDao railwayCrossesRailwayDao;
+    @Autowired
+    private PierDao pierDao;
+    @Autowired
+    private BearingPlatformDao bearingPlatformDao;
+    @Autowired
+    private PileDao pileDao;
+    @Autowired
+    private ComautoeqDao comautoeqDao;
+    @Autowired
+	PreciseControlNetDao preciseControlNetDao;
+	@Autowired
+	GriderDao griderDao;
+    
+
+
+    /**
+     * 上传文件
+     * @param file
+     * @return
+     * @throws IllegalStateException
+     * @throws IOException
+     */
+    @Transactional(readOnly = false)
+    public Attachment saveUploadFile(MultipartFile file)
+            throws IllegalStateException, IOException {
+        if (file == null) {
+            return null;
+        }
+        String fileToPath = Global.getFileRootPath();
+        Attachment attach = new Attachment();
+        if (!file.isEmpty()) {
+            // 判断目录
+            String saveRelativePath = new DateTime().toString("yyyyMM");
+            String savePath = fileToPath + saveRelativePath;
+            File path = new File(savePath);
+            // 没有路径就直接创建
+            if (!(path.exists() && path.isDirectory())) {
+                path.mkdirs();
+            }
+            // 放到规定目录，用的Spring的自带的transferTo没有用FileUtils（主要是这个类还没写完呢。。。）
+            String saveName = System.currentTimeMillis() + ".xls";
+            file.transferTo(new File(path + "/" + saveName));
+
+            // 然后保存到Attachment
+            String fileSuffix = file.getOriginalFilename().substring(
+                    file.getOriginalFilename().lastIndexOf("."));
+
+            attach.setSaveName(saveName);
+            attach.setSavePath(savePath + "/");
+            attach.setFileName(file.getOriginalFilename());
+            attach.setFileSize(file.getSize());
+            attach.setFileSuffix(fileSuffix);
+            attach.setContentType(file.getContentType());
+            attach.setSaveRelativePath(saveRelativePath + "/");
+            attach.setFileType("upload");
+            //dao.save(attach);
+        }
+        return attach;
+    }
+
+    /**
+     * 获取附件地址
+     * @param attachment
+     * @return
+     * @throws IOException
+     */
+    public String getFilepath(Attachment attachment) throws IOException {
+        if (attachment != null) {
+            File f = new File(attachment.getSavePath() + attachment.getSaveName());
+            if (f.exists()) {
+                return f.getAbsolutePath();
+            }
+        }
+        return null;
+    }
+
+    public void importTunel(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private Long bureauNo;// 局编号
+//            private String lineName;// 线名
+//            private Long lineNo;// 线编号
+//            private String stream;// 行别
+//            private Long railtunnelNo;// 隧道号
+//            private String railtunnelName;// 隧道名
+//            private Double length;// 全长
+//            private AssetCard ass;
+//            private String startM;
+//            private String endM;
+//            private List<Attachment> fileAttach= Lists.newArrayList();// 图纸资料
+//            private List<Attachment> imgAttach = Lists.newArrayList();// 图片资料
+//            private Catalog cat;//所属类型
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("railtunnelName");
+            ls.add("centerM");
+            ls.add("stream");
+            ls.add("length");
+
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            for(int i=0;i<res.size();i++) {
+                Tunnel tunnel = new Tunnel();
+                BeanUtil.transMap2Bean2(res.get(i),tunnel);
+                tunnel.setCat(new Catalog(77L)); //默认双线轨道，因为目前只有这类数据
+                tunnelDao.clear();
+                tunnelDao.save(tunnel);
+                tunnelDao.flush();
+            }
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void importCulvert(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//          private String lineName;// 线名
+//            private String stream;// 行别
+//            private Double length;// 涵洞全长
+//            private String spanType;// 孔跨型式
+//            private String clearance;// 涵洞净空
+//            private String type;// 涵洞类型
+//            private String startM;
+//            private String endM;
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("startM");
+            ls.add("endM");
+            ls.add("centerM");
+            ls.add("stream");
+            ls.add("length");
+            ls.add("spanType");
+            ls.add("clearance");
+            ls.add("type");
+
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            for(int i=0;i<res.size();i++) {
+                Culvert entity = new Culvert();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+
+                String spanType = entity.getSpanType();
+
+                if(entity.getSpanType()!=null){
+                    if(spanType.indexOf("框构涵")!=-1){
+                        entity.setCat(new Catalog(54L));
+                    }else if(spanType.indexOf("倒虹吸")!=-1){
+                        entity.setCat(new Catalog(58L));
+                    }
+                    else if(spanType.indexOf("拱涵")!=-1){
+                        entity.setCat(new Catalog(56L));
+                    }
+                    else if(spanType.indexOf("盖板涵")!=-1){
+                        entity.setCat(new Catalog(55L));
+                    }else if(spanType.indexOf("管涵")!=-1){
+                        entity.setCat(new Catalog(57L));
+                    }
+
+                }
+                culvertDao.clear();
+                culvertDao.save(entity);
+                culvertDao.flush();
+            }
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
+    public void importSubgradeProtact(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//    private String lineName;// 线名
+//    private String stream;// 行别
+//    private String startM;// 起点里程
+//    private String endM;// 终点里程
+//    private Double length;// 长度
+//    private String type;// 路基形式
+//    private String reinforce;// 加固形式
+//    private Double slopeL;//最大坡长
+//    private Double slopeM;// 最大坡长里程
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("stream");
+            ls.add("type");
+            ls.add("revetment");//护坡类型
+            ls.add("startM");
+            ls.add("endM");
+            ls.add("centerM");
+            ls.add("length");
+
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            for(int i=0;i<res.size();i++) {
+                SubgradeProtect entity = new SubgradeProtect();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCat(new Catalog(90L));
+                subgradeProtectDao.clear();
+                subgradeProtectDao.save(entity);
+                subgradeProtectDao.flush();
+            }
+//            subgradeProtectDao.flush();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
+    public void importSubgradeDrainage(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private String lineName;// 线名
+//            private String stream;// 行别
+//            private String startM;// 起点里程
+//            private String endM;// 终点里程
+//            private Double length;// 长度
+//            private String type;// 排水设备类型
+//            private String quality;// 排水设备材质
+//            private AssetCard ass;
+//            private List<Attachment> fileAttach= Lists.newArrayList();// 图纸资料
+//            private List<Attachment> imgAttach = Lists.newArrayList();// 图片资料
+//            private Catalog cat;//所属类型
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("startM");
+            ls.add("endM");
+            ls.add("centerM");
+
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            for(int i=0;i<res.size();i++) {
+                SubgradeDrainage entity = new SubgradeDrainage();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCat(new Catalog(89L));
+                subgradeDrainageDao.clear();
+                subgradeDrainageDao.save(entity);
+                subgradeDrainageDao.flush();
+            }
+//            subgradeProtectDao.flush();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void importSubgrade(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//           private String lineName;// 线名
+//            private String stream;// 行别
+//            private String startM;// 起点里程
+//            private String endM;// 终点里程
+//            private Double length;// 长度
+//            private String type;// 路基形式
+//            private String geology;// 路堑地质
+//            private Double height;//高度
+//            private Double highM;// 最大高度里程
+//            private AssetCard ass;
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("lineName");
+            ls.add("stream");
+            ls.add("startM");
+            ls.add("endM");
+            ls.add("centerM");
+            ls.add("length");
+            ls.add("type");
+            ls.add("geology");
+            ls.add("height");
+            ls.add("highM");
+
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            for(int i=0;i<res.size();i++) {
+                Subgrade entity = new Subgrade();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCat(new Catalog(88L));
+                subgradeDao.clear();
+                subgradeDao.save(entity);
+                subgradeDao.flush();
+            }
+//            subgradeProtectDao.flush();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void importSteelRail(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private String lineName;// 线名
+//            private String stream;// 行别
+//            private String lineType;// 线路类型
+//            private String gaugeType;//轨距类型
+//            private String runState;// 运营状态：临管、合资、运营
+//            private String startM;//起始里程
+//            private String endM;//终止里程
+//            private String chainMarker;// 长链标记
+//            private Double raillength;// 单根轨长米
+//            private String railType;// 轨型
+//            private String steelType;//钢种
+//            private String maker;//生产厂商
+//            private String makerYear;//制造年度
+//            private String contackType;//接头方式
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+
+            ls.add("lineName");
+            ls.add("lineType");
+            ls.add("maker");
+            ls.add("makerYear");
+
+            ls.add("railType");
+            ls.add("raillength");
+            ls.add("startM");
+            ls.add("endM");
+            ls.add("centerM");
+            ls.add("steelType");
+            ls.add("stream");
+
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            for(int i=0;i<res.size();i++) {
+                SteelRail entity = new SteelRail();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCat(new Catalog(71L));
+                steelRailDao.clear();
+                steelRailDao.save(entity);
+                steelRailDao.flush();
+            }
+//            subgradeProtectDao.flush();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void importSleeper(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+
+//            private String bridgeName;// 所属桥梁
+//            private String stream;// 行别
+//            private String lineType;// 线路类型
+//            private String gaugeType;//轨枕类型
+//            private String runState;// 运营状态：临管、合资、运营
+//            private String startM;//起始里程
+//            private String endM;//终止里程
+//            private String chainMarker;// 长链标记
+//            private String railType;// 轨枕型号
+//            private String maker;//生产厂商
+//            private String makerYear;//制造年度
+//            private Double plateNum;// 铺设根数
+//            private Double slopeL;// 铺设长度
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("stream");
+            ls.add("railType");
+            ls.add("startM");
+            ls.add("endM");
+            ls.add("centerM");
+
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            for(int i=0;i<res.size();i++) {
+                Sleeper entity = new Sleeper();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCat(new Catalog(72L));
+                sleeperDao.clear();
+                sleeperDao.save(entity);
+                sleeperDao.flush();
+            }
+//            subgradeProtectDao.flush();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void importSecurityZoneSigns(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+
+//            private String workShop;//车间
+//            private String lineType;// 线别
+//            private String stream;//行别
+//            private String outStream; // 侧别
+//            private String signType;//标桩类型
+//            private Double designLength;// 设计距（路基坡脚、堑顶、桥梁外缘）距离
+//            private String note;//备注
+//            private AssetCard ass;
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+
+            ls.add("workShop");
+            ls.add("lineType");
+            ls.add("stream");
+            ls.add("outStream");
+            ls.add("centerM");
+            ls.add("signType");
+            ls.add("designLength");
+
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            for(int i=0;i<res.size();i++) {
+                SecurityZoneSigns entity = new SecurityZoneSigns();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCat(new Catalog(82L));
+                securityZoneSignsDao.clear();
+                securityZoneSignsDao.save(entity);
+                securityZoneSignsDao.flush();
+            }
+//            subgradeProtectDao.flush();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void importRoadRailParallel(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+
+//            private String lineName;// 线名
+//            private String stream;// 行别
+//            private String sideStream;//侧别
+//            private String section; // 区间
+//            private String startM;//起始里程
+//            private String endM;//终止里程
+//            private Double mipLength;// 长度
+//            private Double mixHeight;// 最大高差
+//            private Double horDistance;// 水平距离
+//            private String subgradeType;//路基类型
+//            private String protectTypel;// 防护设施类型
+//            private String fzLevel;// 防撞等级
+//            private String wayType;// 道路类别
+//            private String note;// 备注
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("lineName");
+            ls.add("stream");
+            ls.add("sideStream");
+            ls.add("section");
+            ls.add("startM");
+            ls.add("endM");
+            ls.add("centerM");
+            ls.add("mipLength");
+            ls.add("mixHeight");
+            ls.add("horDistance");
+            ls.add("subgradeType");
+            ls.add("protectTypel");
+            ls.add("fzLevel");
+            ls.add("wayType");
+            ls.add("note");
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            for(int i=0;i<res.size();i++) {
+                RoadRailParallel entity = new RoadRailParallel();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCat(new Catalog(83L));
+                roadRailParallelDao.clear();
+                roadRailParallelDao.save(entity);
+                roadRailParallelDao.flush();
+            }
+//            subgradeProtectDao.flush();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
+
+    public void importBarrier(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+
+//            private String workshop;// 车间
+//            private String lineName;// 线名
+//            private String stream;// 行别
+//            private Double length;// 屏障长度
+//            private Double height;// 屏障高度
+//            private String startM;// 屏障起始里程
+//            private String endM;// 屏障终止里程
+//            private String locate;// 位置
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+
+            ls.add("workshop");
+            ls.add("lineName");
+            ls.add("stream");
+            ls.add("length");
+            ls.add("height");
+            ls.add("locate");
+            ls.add("startM");
+            ls.add("endM");
+            ls.add("centerM");
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            for(int i=0;i<res.size();i++) {
+                Barrier entity = new Barrier();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCat(new Catalog(86L));
+                barrierDao.clear();
+                barrierDao.save(entity);
+                barrierDao.flush();
+            }
+//            subgradeProtectDao.flush();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void importPipelines(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+
+//            private Line lines;// 线别
+//            private String stream;// 行别
+//            private String poreType; // 孔别
+//            private String subgrade;//桥涵孔跨式样/路基
+//            private String pipelineName;// 管线名称
+//            private String throughWay;// 通过方式
+//            private String lineparam;// 管线主要参数
+//            private String depth;// 管线埋深（自然地面下）m
+//            private String type;//类型
+//            private String section;// 横截面（长×宽、直径）米
+//            private String horizontalDistance;// 出口距坡脚水平距离/米
+//            private Double verticalDistance;// 距轨顶垂直距离/米
+//            private String useYears;// 管线使用年限
+//            private String scrapProcessing;// 报废时处理办法
+//            private String protectStatus;// 目前保护设施技术状态
+//            private String applyDivision;// 申请单位
+//            private String equityDivision;// 产权单位
+//            private String repairDivision;//管线养护维修单位
+//            private String workDivision;//施工单位
+//            private String examineDivision;//审批单位
+//            private String examineTime;//审批时间
+//            private String agent;//工务段经办人
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+//            ls.add("lines");
+            ls.add("stream");
+            ls.add("centerM");
+            ls.add("poreType");
+            ls.add("subgrade");
+            ls.add("pipelineName");
+            ls.add("throughWay");
+            ls.add("lineparam");
+            ls.add("depth");
+            ls.add("type");
+            ls.add("section");
+            ls.add("horizontalDistance");
+            ls.add("verticalDistance");
+            ls.add("useYears");
+            ls.add("scrapProcessing");
+            ls.add("protectStatus");
+            ls.add("applyDivision");
+            ls.add("equityDivision");
+            ls.add("repairDivision");
+            ls.add("workDivision");
+            ls.add("examineDivision");
+            ls.add("examineTime");
+            ls.add("agent");
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Line line = new Line();
+            line.setId(1L);
+            Catalog catalog = new Catalog(64L);
+            for(int i=0;i<res.size();i++) {
+                Pipelines entity = new Pipelines();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCat(catalog);
+                entity.setLines(line);
+                pipelinesDao.clear();
+                pipelinesDao.save(entity);
+                pipelinesDao.flush();
+            }
+//            subgradeProtectDao.flush();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void importRailwayCrossesRailway(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private String lineName;// 线名
+//            private String stream;// 行别
+//            private String bridgeName; //桥名
+//            private String otype; // 孔跨式样
+//            private String section;//区间
+//            private String downRoadName;// 桥下线名
+//            private Double downRoadM;// 桥下里程
+//            private String through;//穿越桥孔
+//            private Double throughCenterM;// 穿越桥孔中心里程
+//            private String downRoadSection;//桥下线路区间
+//            private String note;// 备注（设备单位）
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("lineName");
+            ls.add("stream");
+            ls.add("bridgeName");
+            ls.add("centerM");
+            ls.add("section");
+            ls.add("otype");
+            ls.add("downRoadName");
+            ls.add("downRoadM");
+            ls.add("through");
+            ls.add("throughCenterM");
+            ls.add("downRoadSection");
+            ls.add("note");
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Line line = new Line();
+            line.setId(1L);
+            Catalog catalog = new Catalog(505L);
+            for(int i=0;i<res.size();i++) {
+                RailwayCrossesRailway entity = new RailwayCrossesRailway();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCat(catalog);
+                //entity.setLines(line);
+                railwayCrossesRailwayDao.clear();
+                railwayCrossesRailwayDao.save(entity);
+                railwayCrossesRailwayDao.flush();
+            }
+//            subgradeProtectDao.flush();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @Autowired
+    private HeightLimitProFrameDao heightLimitProFrameDao;
+
+    public void importHeightLimitProFrame(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private String lineName;// 线名
+//            private String stream;// 行别
+//            private String bridgeType;// 桥涵孔跨式样
+//            private Double throughHeight;// 桥涵通行净高
+//            private Double limitHeight;// 限高牌限制高度值
+//            private String hlpfSize;// 防护架尺寸(高度*宽度)
+//            private String roadLevel;// 下穿道路等级
+//            private String roadType;// 路面形式
+//            private Integer proNum;// 防护架数量
+//            private String proType;// 防护架型式
+//            private String proDistance;// 防护架距离桥涵的距离
+//            private Double proWeight;// 钢材折合重量
+//            private AssetCard ass;
+//            private String startM;
+//            private String endM;
+//            private String note;// 备注
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("lineName");
+            ls.add("stream");
+            ls.add("centerM");
+            ls.add("bridgeType");
+            ls.add("throughHeight");
+            ls.add("limitHeight");
+            ls.add("hlpfSize");
+            ls.add("roadLevel");
+            ls.add("roadType");
+            ls.add("proNum");
+            ls.add("proType");
+            ls.add("proDistance");
+            ls.add("proWeight");
+            ls.add("note");
+            ls.add("startM");
+            ls.add("endM");
+
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Line line = new Line();
+            line.setId(1L);
+            Catalog catalog = new Catalog(53L);
+            for(int i=0;i<res.size();i++) {
+                HeightLimitProFrame entity = new HeightLimitProFrame();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCat(catalog);
+                //entity.setLines(line);
+                heightLimitProFrameDao.clear();
+                heightLimitProFrameDao.save(entity);
+                heightLimitProFrameDao.flush();
+            }
+//            subgradeProtectDao.flush();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @Autowired
+    private CorridorDao corridorDao;
+
+    public void importCorridor(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//           private String name;// 桥梁名称
+//            private String lineName;//线名
+//            private String location;//紧急疏散通道位置 K317+228
+//            private String pierNum;//墩号
+//            private String setPosition;//设置位置 左侧/右侧
+//            private Double locationSpan;//间距
+//            private Double height;//通道高度
+//            private String adoptType;//采用的形式 顺坡 （一）（二）
+//            private String type;//通道类型 应急通道/救援通道
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("lineName");
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("location");
+            ls.add("pierNum");
+            ls.add("setPosition");
+            ls.add("locationSpan");
+            ls.add("height");
+            ls.add("adoptType");
+            ls.add("name");
+
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Line line = new Line();
+            line.setId(1L);
+            Catalog catalog = new Catalog(84L);
+            for(int i=0;i<res.size();i++) {
+                Corridor entity = new Corridor();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCat(catalog);
+                //entity.setLines(line);
+                corridorDao.clear();
+                corridorDao.save(entity);
+                corridorDao.flush();
+            }
+//            subgradeProtectDao.flush();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @Autowired
+    private FenceGateDao fenceGateDao;
+
+    public void importFenceGate(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private String gateNumber;//编号
+//            private String lineName;// 线名
+//            private String stream;// 行别
+//            private String sideStream;// 侧别
+//            private String position; // 位置
+//            private String section;//区间
+//            private Double distance;//相邻作业门距离（m）
+//            private String gateType;// 形式
+//            private String shield;// 防护罩加设情况
+//            private String note;// 备注
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("stream");
+            ls.add("centerM");
+            ls.add("position");
+            ls.add("section");
+            ls.add("distance");
+            ls.add("gateType");
+            ls.add("shield");
+
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Line line = new Line();
+            line.setId(1L);
+            Catalog catalog = new Catalog(81L);
+            for(int i=0;i<res.size();i++) {
+                FenceGate entity = new FenceGate();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCat(catalog);
+                //entity.setLines(line);
+                fenceGateDao.clear();
+                fenceGateDao.save(entity);
+                fenceGateDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @Autowired
+    private FenceDao fenceDao;
+
+    public void importFence(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private String lineName;// 线名
+//            private String stream;// 行别
+//            private String sideStream;//侧别
+//            private String startM; // 起始里程
+//            private String endM;//终止里程
+//            private Double fenceLength;//栅栏长度
+//            private String netType;// 网片样式
+//            private String postType;// 立柱样式
+//            private Double railDistance;// 距外轨距离
+//            private String location;//埋设位置
+//            private String startB;// 栅栏起始桥墩
+//            private String endB;// 栅栏终止桥墩
+//            private String builtYear;// 栅栏安设年度
+//            private Integer stockadeNum;//栅栏门数量
+//            private String flag;// 是否安设刺丝滚笼
+//            private String speed;//速度区段
+//            private String note;//备注
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("lineName");
+            ls.add("stream");
+            ls.add("sideStream");
+            ls.add("startM");
+            ls.add("endM");
+            ls.add("centerM");
+            ls.add("fenceLength");
+            ls.add("netType");
+            ls.add("postType");
+            ls.add("railDistance");
+            ls.add("location");
+            ls.add("startB");
+            ls.add("builtYear");
+            ls.add("stockadeNum");
+            ls.add("flag");
+            ls.add("speed");
+            ls.add("note");
+
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Line line = new Line();
+            line.setId(1L);
+            Catalog catalog = new Catalog(80L);
+            for(int i=0;i<res.size();i++) {
+                Fence entity = new Fence();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCat(catalog);
+                //entity.setLines(line);
+                fenceDao.clear();
+                fenceDao.save(entity);
+                fenceDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
+    public void importGrader(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private String type;// 梁类型
+//            private Double length;// 梁长
+//            private Double sildwidth;// 缝宽
+//            private Double width;// 梁宽
+//            private Double height;// 梁标高
+//            private Double loss;// 梁圬工方
+//            private String startM;// 起始里程
+//            private String endM;// 终点里程
+//            private Catalog cat;//所属类型
+//            private AssetCard ass;
+//            private Bridge bridge; //所属桥梁
+//            private Pier pier;//所属墩身
+//            private Double spans;//跨度
+//            private String changeYear;//换梁年代
+//            private String pattern;//梁式样
+//            private String patternCode;//梁式样代码
+//            private Double baseHeight;//梁底高
+//            private String hole;//孔别
+//            private String layYear;//枕铺设年度
+//            private String drawNo;//定型图号
+//            private String designLimits;//设计限界
+//            private String kinds;//梁种类
+//            private Double clearHole;//净孔
+//            private Double weight;//梁重
+//            private Double volume;//梁体积
+//            private Double maincenterSpace;//主梁中心距
+//            private Double ordinatecenterSpace;//纵梁中心距
+//            private Double ordinateHeight;//纵梁高
+//            private String desliveload;//设计活载
+//            private Double carryCoefficient;//承载系数
+//            private String controlPostion;//控制部位
+//            private String paintingYear;//钢梁涂装年
+//            private Integer bend;//挠度
+//            private String fastenerType;//扣件类型
+//            private Integer fastenerNum;//扣件数量
+//            private String plateType;//轨枕类型
+//            private Integer plateNum;//轨枕数量
+//            private String steelrailType;//钢轨类型
+//            private String glzfcxjg;//钢梁振幅超限加固
+//            private Integer rcbulkNum;//混凝土梁横隔板数
+//            private String rcbulkJoin;//混凝土梁横隔板连接
+//            private String limitEq;//梁端限位装置
+//            private String rcbzljg;//混凝土并置梁加固
+//            private Double dzcwidth;//道碴槽宽度
+//            private Double thickness;//圬工梁跨中道碴厚度
+//            private String footwalkMaterial;//人行道材质
+//            private Double footwalkWidth;//人行道宽
+//            private String fixcheckEq;//固定检查设备
+//            private String gtly;//公铁两用
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+
+            ls.add("brigername");//桥梁名称
+
+            ls.add("lineName");
+            ls.add("stream");
+            ls.add("sideStream");
+            ls.add("startM");
+            ls.add("endM");
+            ls.add("centerM");
+            ls.add("fenceLength");
+            ls.add("netType");
+            ls.add("postType");
+            ls.add("railDistance");
+            ls.add("location");
+            ls.add("startB");
+            ls.add("builtYear");
+            ls.add("stockadeNum");
+            ls.add("flag");
+            ls.add("speed");
+            ls.add("note");
+
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Line line = new Line();
+            line.setId(1L);
+            Catalog catalog = new Catalog(80L);
+            for(int i=0;i<res.size();i++) {
+                Fence entity = new Fence();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCat(catalog);
+                //entity.setLines(line);
+                fenceDao.clear();
+                fenceDao.save(entity);
+                fenceDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
+    public void importPier(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private String pnumber;// 墩台号
+//            private String type;// 墩身类型
+//            private String hwd;// 墩身长宽高
+//            private String pLength;//墩身长
+//            private String pWidth;//墩身宽
+//            private String pHeight;//墩身高
+//            private String designM;//设计里程
+//            private String hollow;// 是否空心
+//            private String hwidth;// 空心宽度
+//            private Double loss;// 墩身圬工方
+//            private Bridge bridge;//所属桥梁
+//            private AssetCard ass;
+//            private String endM;
+//            private String startM;
+//            private String hole;//孔别
+//            private Double topHeight;//墩顶高
+//            private Double baseHeight;//墩基底高
+//            private String drawNo;//墩台定型图号
+//            private Double maxScourline;//最大冲刷线
+//            private String material;//墩材质
+//            private String baseType;//墩基础式样
+//            private String basematerial;//墩基础材质
+//            private String baseGeology;//墩基底地质
+//            private Catalog cat;//所属类型
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+
+            ls.add("bridgeName");//桥梁名称
+            
+            ls.add("pnumber");
+            ls.add("designM");
+            ls.add("centerM");
+            ls.add("type");
+            ls.add("pWidthth");
+            ls.add("pHeight");
+            ls.add("pLength");
+            ls.add("hollow");
+            ls.add("hwidth");
+            ls.add("loss");
+            ls.add("topHeight");
+            ls.add("startM");
+            ls.add("endM");
+
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Line line = new Line();
+            line.setId(1L);
+            Catalog catalog = new Catalog(60L);
+            for(int i=0;i<res.size();i++) {
+                Pier entity = new Pier();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCat(catalog);
+                
+                //获取所有的桥梁类型
+                List<Bridge> listbri = bridgeDao.findAllList();
+                String bridgeName = (res.get(i).get("bridgeName")==null)?"":res.get(i).get("bridgeName").toString();
+                //循环桥梁数据，匹配数据里面的桥梁数据
+                for(int j=0;j<listbri.size();j++){
+                	if(bridgeName.equals(listbri.get(j).getBridgeName())){
+                		entity.setBridge(listbri.get(j));
+                		break;
+                	}
+                	
+                }
+
+
+
+                //entity.setLines(line);
+                pierDao.clear();
+                pierDao.save(entity);
+                pierDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void importBearingplatform(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//        	private Long pnumber;// 承台层数
+//        	private String hwd;// 承台长宽高
+//        	private Double loss;// 承台圬工方
+//        	private String designM; // 设计里程
+//        	private String startM;
+//        	private String endM;
+//        	private Catalog cat;//所属类型
+//        	private AssetCard ass;//固资卡片
+//        	private Bridge bridge;//所属桥梁
+//        	private Pier pier;//所属墩身
+//        	private Double beaplfTopHeight;//承台顶高
+//        	private Double beaplfBottomHeight;//承台底高
+//        	private Double lengthSequence1;//长度序列1
+//        	private Double lengthSequence2;//长度序列2
+//        	private Double lengthSequence3;//长度序列3
+//        	private Double widthSequence1;//宽度序列1
+//        	private Double widthSequence2;//宽度序列2
+//        	private Double widthSequence3;//宽度序列3
+//        	private Double heightSequence1;//高度序列1
+//        	private Double heightSequence2;//高度序列2
+//        	private Double heightSequence3;//高度序列3
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+
+            ls.add("bridgeName");//桥梁名称
+            ls.add("pierNum");//墩台号
+            
+            ls.add("designM");
+            ls.add("centerM");
+            ls.add("startM");
+            ls.add("endM");
+            
+            ls.add("beaplfTopHeight");
+            ls.add("beaplfBottomHeigh");
+            ls.add("pnumber");
+            
+            
+            ls.add("widthSequence1");
+            ls.add("widthSequence2");
+            ls.add("widthSequence3");
+            ls.add("heightSequence1");
+            ls.add("heightSequence2");
+            ls.add("heightSequence3");
+            ls.add("lengthSequence1");
+            ls.add("lengthSequence2");
+            ls.add("lengthSequence3");
+            
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Line line = new Line();
+            line.setId(1L);
+            Catalog catalog = new Catalog(61L);
+            for(int i=0;i<res.size();i++) {
+            	BearingPlatform entity = new BearingPlatform();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCat(catalog);
+                
+                //获取所有的桥梁类型
+                List<Bridge> listbri = bridgeDao.findAllList();
+                String bridgeName = (res.get(i).get("bridgeName")==null)?"":res.get(i).get("bridgeName").toString();
+                //循环桥梁数据，匹配数据里面的桥梁数据
+                for(int j=0;j<listbri.size();j++){
+                	if(bridgeName.equals(listbri.get(j).getBridgeName())){
+                		entity.setBridge(listbri.get(j));
+                		
+                        //获取所有的墩台类型
+                        List<Pier> listpier = pierDao.findAllListByBri(listbri.get(j).getId());
+                        String pierNum = (res.get(i).get("pierNum")==null)?"":res.get(i).get("pierNum").toString();
+                        //循环桥梁数据，匹配数据里面的桥梁数据
+                        for(int k=0;k<listpier.size();k++){
+                        	if(pierNum.equals(listpier.get(k).getPnumber())){
+                        		entity.setPier(listpier.get(k));
+                        		break;
+                        	}
+                        	
+                        }
+                		
+                		break;
+                	}
+                	
+                }
+                
+                //entity.setLines(line);
+                bearingPlatformDao.clear();
+                bearingPlatformDao.save(entity);
+                bearingPlatformDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+    
+    public void importPile(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//        	private String pnumber;// 钻孔数
+//        	private Double diaM;// 钻孔直径
+//        	private Double dlength;// 钻孔长
+//        	private Double array;// 桩基排列
+//        	private Double loss;// 桩基圬工方
+//        	private Bridge bridge;//所属桥梁
+//        	private AssetCard ass;
+//        	private String pierNo;//所在墩号
+//        	private String startM;
+//        	private String endM;
+//        	private Pier pier;//所属墩身
+//        	private Catalog cat;//所属类型
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+
+            ls.add("bridgeName");//桥梁名称
+            ls.add("pierNum");//墩台号
+            
+            ls.add("designM");
+            ls.add("centerM");
+            ls.add("startM");
+            ls.add("endM");
+            
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Line line = new Line();
+            line.setId(1L);
+            Catalog catalog = new Catalog(63L);
+            for(int i=0;i<res.size();i++) {
+            	Pile entity = new Pile();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCat(catalog);
+                
+                //获取所有的桥梁类型
+                List<Bridge> listbri = bridgeDao.findAllList();
+                String bridgeName = (res.get(i).get("bridgeName")==null)?"":res.get(i).get("bridgeName").toString();
+                //循环桥梁数据，匹配数据里面的桥梁数据
+                for(int j=0;j<listbri.size();j++){
+                	if(bridgeName.equals(listbri.get(j).getBridgeName())){
+                		entity.setBridge(listbri.get(j));
+                		
+                        //获取所有的墩台类型
+                        List<Pier> listpier = pierDao.findAllListByBri(listbri.get(j).getId());
+                        String pierNum = (res.get(i).get("pierNum")==null)?"":res.get(i).get("pierNum").toString();
+                        //循环桥梁数据，匹配数据里面的桥梁数据
+                        for(int k=0;k<listpier.size();k++){
+                        	if(pierNum.equals(listpier.get(k).getPnumber())){
+                        		entity.setPier(listpier.get(k));
+                        		break;
+                        	}
+                        	
+                        }
+                		
+                		break;
+                	}
+                	
+                }
+                
+                //entity.setLines(line);
+                pileDao.clear();
+                pileDao.save(entity);
+                pileDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+    
+    public void importComautoeq(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+
+//            private AssetCard assetCard;//所属固资卡片
+//            private String lineName;//线名
+//            private String name;//名称
+//            private String type;//型号
+//            private Substation substation;//所属变电所
+//            private String outNo;//出厂序号
+//            private Office officeName;//所属部门
+//            private String institution;//单位
+//            private String cstu;//装置结构
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+
+            ls.add("workshop");
+            ls.add("lineName");
+            ls.add("stream");
+            ls.add("length");
+            ls.add("height");
+            ls.add("locate");
+            ls.add("startM");
+            ls.add("endM");
+            ls.add("centerM");
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            for(int i=0;i<res.size();i++) {
+            	Comautoeq entity = new Comautoeq();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCata(new Catalog(41L));
+                comautoeqDao.clear();
+                comautoeqDao.save(entity);
+                comautoeqDao.flush();
+            }
+//            subgradeProtectDao.flush();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+    
+    public void importGrider(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private String type;// 梁类型
+//            private Double length;// 梁长
+//            private Double sildwidth;// 缝宽
+//            private Double width;// 梁宽
+//            private Double height;// 梁标高
+//            private Double loss;// 梁圬工方
+//            private String startM;// 起始里程
+//            private String endM;// 终点里程
+//            private Catalog cat;//所属类型
+//            private AssetCard ass;
+//            private Bridge bridge; //所属桥梁
+//            private Pier pier;//所属墩身
+//            private Double spans;//跨度
+//            private String changeYear;//换梁年代
+//            private String pattern;//梁式样
+//            private String patternCode;//梁式样代码
+//            private Double baseHeight;//梁底高
+//            private String hole;//孔别
+//            private String layYear;//枕铺设年度
+//            private String drawNo;//定型图号
+//            private String designLimits;//设计限界
+//            private String kinds;//梁种类
+//            private Double clearHole;//净孔
+//            private Double weight;//梁重
+//            private Double volume;//梁体积
+//            private Double maincenterSpace;//主梁中心距
+//            private Double ordinatecenterSpace;//纵梁中心距
+//            private Double ordinateHeight;//纵梁高
+//            private String desliveload;//设计活载
+//            private Double carryCoefficient;//承载系数
+//            private String controlPostion;//控制部位
+//            private String paintingYear;//钢梁涂装年
+//            private Integer bend;//挠度
+//            private String fastenerType;//扣件类型
+//            private Integer fastenerNum;//扣件数量
+//            private String plateType;//轨枕类型
+//            private Integer plateNum;//轨枕数量
+//            private String steelrailType;//钢轨类型
+//            private String glzfcxjg;//钢梁振幅超限加固
+//            private Integer rcbulkNum;//混凝土梁横隔板数
+//            private String rcbulkJoin;//混凝土梁横隔板连接
+//            private String limitEq;//梁端限位装置
+//            private String rcbzljg;//混凝土并置梁加固
+//            private Double dzcwidth;//道碴槽宽度
+//            private Double thickness;//圬工梁跨中道碴厚度
+//            private String footwalkMaterial;//人行道材质
+//            private Double footwalkWidth;//人行道宽
+//            private String fixcheckEq;//固定检查设备
+//            private String gtly;//公铁两用
+
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+
+            ls.add("bridgeName");//桥梁名称
+            ls.add("pierNum");//墩台号
+            ls.add("type");//梁类型
+
+            ls.add("length");
+            ls.add("sildwidth");
+            ls.add("width");
+            ls.add("height");
+            ls.add("baseHeight");
+            ls.add("startM");
+            ls.add("endM");
+            ls.add("centerM");
+            
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Line line = new Line();
+            line.setId(1L);
+            Catalog catalog = new Catalog(59L);
+            for(int i=0;i<res.size();i++) {
+                Grider entity = new Grider();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCat(catalog);
+                
+                //获取所有的桥梁类型
+                List<Bridge> listbri = bridgeDao.findAllList();
+                String bridgeName = (res.get(i).get("bridgeName")==null)?"":res.get(i).get("bridgeName").toString();
+                //循环桥梁数据，匹配数据里面的桥梁数据
+                for(int j=0;j<listbri.size();j++){
+                	if(bridgeName.equals(listbri.get(j).getBridgeName())){
+                		entity.setBridge(listbri.get(j));
+                		
+                        //获取所有的墩台类型
+                        List<Pier> listpier = pierDao.findAllListByBri(listbri.get(j).getId());
+                        String pierNum = (res.get(i).get("pierNum")==null)?"":res.get(i).get("pierNum").toString();
+                        //循环桥梁数据，匹配数据里面的桥梁数据
+                        for(int k=0;k<listpier.size();k++){
+                        	if(pierNum.equals(listpier.get(k).getPnumber())){
+                        		entity.setPier(listpier.get(k));
+                        		break;
+                        	}
+                        	
+                        }
+                		
+                		break;
+                	}
+                	
+                }
+                
+                
+                //桥梁类型
+                List<Dict> listdict = DictUtils.getDictList("biz_grider_type");
+                String type = (res.get(i).get("type")==null)?"":res.get(i).get("type").toString();
+                for(int l=0;l<listdict.size();l++){
+                	if(type.equals(listdict.get(l).getLabel())){
+                		entity.setType(listdict.get(l).getValue());
+                		break;
+                	}
+                }
+                
+                //entity.setLines(line);
+                griderDao.clear();
+                griderDao.save(entity);
+                griderDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+    
+    public void importPrecisecontnet(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+            
+//        	private String pointNum;//点号
+//        	private String xHeight;//X坐标
+//        	private String yHeight;//Y坐标
+//        	private String ballTopHeight;//球顶标高
+//        	private Catalog cat;//所属类型
+//        	private AssetCard ass;
+//        	private Dict dic;//坐标系字典
+        	
+            ls.add("pointNum");
+            ls.add("xHeight");
+            ls.add("yHeight");
+            ls.add("ballTopHeight");
+            ls.add("remark");
+
+            InputStream is = new FileInputStream(getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            for(int i=0;i<res.size();i++) {
+            	PreciseControlNet entity = new PreciseControlNet();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCat(new Catalog(515L));
+                entity.setDic(new Dict(81L));
+                preciseControlNetDao.clear();
+                preciseControlNetDao.save(entity);
+                preciseControlNetDao.flush();
+            }
+//            subgradeProtectDao.flush();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+}

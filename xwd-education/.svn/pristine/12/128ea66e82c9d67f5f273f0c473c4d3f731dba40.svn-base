@@ -1,0 +1,54 @@
+package com.ict.web.modules.inf.nk.web;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.ict.web.commons.web.BaseController;
+import com.ict.web.commons.web.Page;
+import com.ict.web.modules.inf.nk.entity.InfPhaseBreaker;
+import com.ict.web.modules.inf.nk.service.InfPhaseBreakerService;
+
+/**
+ * 
+ *  @description:分段绝缘器、器件式分相检测检修记录Controller
+ *  @author: lutao 
+ *  @create Date:2016年4月30日
+ */
+@Controller
+@RequestMapping(value = "inf/nk/infphasebreaker")
+public class InfPhaseBreakerController extends BaseController {
+	@Autowired
+	private InfPhaseBreakerService service;
+	
+	@ModelAttribute
+	public InfPhaseBreaker get(@RequestParam(required = false) Long id){
+		if(id != null){
+			return service.get(id);
+		}else{
+			return new InfPhaseBreaker();
+		}
+	}
+	
+	@RequestMapping(value = { "list", "" })
+	public String list(InfPhaseBreaker entity, HttpServletRequest request, HttpServletResponse response, Model model) {
+		Page<InfPhaseBreaker> page = service.find(new Page<InfPhaseBreaker>(request, response), entity);
+		
+		model.addAttribute("page", page);
+		model.addAttribute("infPhaseBreaker", entity);
+		
+		return "modules/inf/nk/infPhaseBreakerList";
+	}
+	
+	@RequestMapping(value = "view")
+	public String view(InfPhaseBreaker entity, Model model) {
+		model.addAttribute("infPhaseBreaker", entity);
+		return "modules/inf/nk/infPhaseBreakerView";
+	}
+}

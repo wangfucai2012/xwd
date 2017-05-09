@@ -1,0 +1,140 @@
+package com.ict.web.modules.data.work.web;
+
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.ict.web.commons.config.Global;
+import com.ict.web.commons.web.BaseController;
+import com.ict.web.commons.web.Page;
+import com.ict.web.modules.assetcard.entity.AssetCard;
+import com.ict.web.modules.assetcard.service.AssetCardServices;
+import com.ict.web.modules.data.work.entity.HighwayCrossesRailroad;
+import com.ict.web.modules.data.work.service.HighwayCrossesRailroadService;
+import com.ict.web.modules.sys.entity.Catalog;
+import com.ict.web.modules.sys.service.CatalogService;
+
+
+
+
+/**
+ * 
+ *  @description:公跨铁Controller
+ *  @author: wangjianwei 
+ *  @create Date:2016年4月25日 上午11:09:54
+ */
+@Controller
+@RequestMapping(value = "data/work/highwaycrossesrailroad")
+public class HighwayCrossesRailroadController extends BaseController {
+	@Autowired
+	private CatalogService catalogService;
+	@Autowired
+	HighwayCrossesRailroadService highwayCrossesRailroadSerivce;
+	@Autowired
+	private AssetCardServices assetCardservice;
+
+	@ModelAttribute
+	public HighwayCrossesRailroad get(@RequestParam(required = false) Long id) {
+		if (id != null) {
+			return highwayCrossesRailroadSerivce.get(id);
+		} else {
+			return new HighwayCrossesRailroad();
+		}
+	}
+
+	@RequiresPermissions("data:work:highwaycrossesrailroad:view")
+	@RequestMapping(value = { "list", "" })
+	public String list(HighwayCrossesRailroad entity, HttpServletRequest request,
+			HttpServletResponse response, Model model,@RequestParam(required = false) Long catalog) {
+		Page<HighwayCrossesRailroad> page = highwayCrossesRailroadSerivce.find(new Page<HighwayCrossesRailroad>(request, response),
+				entity,catalog);
+		model.addAttribute("page", page);
+		if(catalog!=null){			
+			Catalog cat = catalogService.getById(catalog);
+			entity.setCat(cat);
+		}
+		model.addAttribute("highwayCrossesRailroad", entity);
+		return "modules/data/work/highwayCrossesRailroadList";
+	}
+
+	@RequiresPermissions("data:work:highwaycrossesrailroad:view")
+	@RequestMapping(value = "form")
+	public String form(HighwayCrossesRailroad entity, Model model,@RequestParam(required = false) Long catalog) {
+		if(catalog!=null){			
+			Catalog cat = catalogService.getById(catalog);
+			entity.setCat(cat);
+			List<AssetCard> listorg= assetCardservice.getByCatalog(catalog);
+			if(listorg.size()>0){			
+				model.addAttribute("listorg", listorg);
+			}else{
+			List<AssetCard> listorgs= assetCardservice.getByCatalog(cat.getParents().getId());
+			model.addAttribute("listorg", listorgs);
+			}
+		}
+		model.addAttribute("highwayCrossesRailroad", entity);
+		return "modules/data/work/highwayCrossesRailroadForm";
+	}
+	
+	@RequiresPermissions("data:work:highwaycrossesrailroad:view")
+	@RequestMapping(value = "view")
+	public String view(HighwayCrossesRailroad entity, Model model) {
+		model.addAttribute("highwayCrossesRailroad", entity);
+		return "modules/data/work/highwayCrossesRailroadView";
+	}
+
+	@RequiresPermissions("data:work:highwaycrossesrailroad:edit")
+	@RequestMapping(value = "save")
+	public String save(HighwayCrossesRailroad entity, Model model,
+			RedirectAttributes redirectAttributes) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/data/work/highwaycrossesrailroad/?repage";// "+Global.getAdminPath()+"
+		}
+		if (!beanValidator(model, entity)) {
+			return form(entity, model,entity.getCat().getId());
+		}
+		highwayCrossesRailroadSerivce.save(entity);
+		addMessage(redirectAttributes, "保存成功");
+		return "redirect:/data/work/highwaycrossesrailroad/?repage&catalog="+entity.getCat().getId();// "+Global.getAdminPath()+"
+	}
+
+	@RequiresPermissions("data:work:highwaycrossesrailroad:edit")
+	@RequestMapping(value = "deleteMulti")
+    public String deleteMulti(@RequestParam String assembleDelId, RedirectAttributes redirectAttributes) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/data/work/highwaycrossesrailroad/?repage";// "+Global.getAdminPath()+"
+		}
+		highwayCrossesRailroadSerivce.deleteMulti(assembleDelId);
+		addMessage(redirectAttributes, "删除成功");
+		return "redirect:/data/work/highwaycrossesrailroad/?repage";// "+Global.getAdminPath()+"
+	}
+
+    /**
+     * 删除方法
+     * @param id
+     * @param catalogid
+     * @param redirectAttributes
+     * @return
+     */
+    @RequestMapping(value = "delete")
+    public String delete(Long id,Long catalog,RedirectAttributes redirectAttributes){
+
+    	highwayCrossesRailroadSerivce.delete(id);
+
+        addMessage(redirectAttributes,"删除成功");
+
+        return "redirect:/data//work/highwaycrossesrailroad/list?repage&catalog="+catalog;
+    }
+}

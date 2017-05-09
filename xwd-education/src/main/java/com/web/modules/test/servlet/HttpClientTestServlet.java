@@ -1,0 +1,138 @@
+package com.web.modules.test.servlet;
+
+import com.web.commons.utils.StringUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+/**
+ * ╮(￣▽￣")╭ 无法自动发现
+ * 
+ * @description:
+ * @author: nanxiaoqiang
+ * @version: V1.00
+ * @create Date: 2015年5月17日下午5:46:59
+ */
+@WebServlet("/test.do")
+public class HttpClientTestServlet extends HttpServlet {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	private static final int TIMEOUT_SECONDS = 20;
+
+	private static final int POOL_SIZE = 20;
+
+	protected Logger logger = LoggerFactory.getLogger(getClass());
+
+	private static CloseableHttpClient httpClient;
+
+	@Override
+	public void init() throws ServletException {
+		initApacheHttpClient();
+		super.init();
+	}
+
+	// 创建包含connection pool与超时设置的client
+	private void initApacheHttpClient() {
+		RequestConfig requestConfig = RequestConfig.custom()
+				.setSocketTimeout(TIMEOUT_SECONDS * 1000)
+				.setConnectTimeout(TIMEOUT_SECONDS * 1000).build();
+
+		httpClient = HttpClientBuilder.create().setMaxConnTotal(POOL_SIZE)
+				.setMaxConnPerRoute(POOL_SIZE)
+				.setDefaultRequestConfig(requestConfig).build();
+	}
+
+	@Override
+	public void destroy() {
+		destroyApacheHttpClient();
+		super.destroy();
+	}
+
+	private void destroyApacheHttpClient() {
+		try {
+			if (httpClient != null)
+				httpClient.close();
+		} catch (IOException e) {
+			logger.error("httpclient close fail", e);
+		}
+	}
+
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
+		// 获取URL
+		String contentUrl = req.getParameter("contentUrl");
+		if (StringUtils.isBlank(contentUrl)) {
+			resp.sendError(HttpServletResponse.SC_BAD_REQUEST,
+					"contentUrl parameter is required.");
+		}
+		// 基於配置，使用HttpClient或JDK 獲取URL內容
+		String client = req.getParameter("client");
+		if ("apache".equals(client)) {
+			fetchContentByApacheHttpClient(resp, contentUrl);
+		} else {
+			fetchContentByJDKConnection(resp, contentUrl);
+		}
+	}
+
+	private void fetchContentByJDKConnection(HttpServletResponse resp,
+			String contentUrl) {
+
+	}
+
+	private void fetchContentByApacheHttpClient(HttpServletResponse resp,
+			String contentUrl) throws IOException {
+		// 获取内容
+		HttpGet httpGet = new HttpGet(contentUrl);
+		CloseableHttpResponse remoteResponse = null;
+		try {
+			remoteResponse = httpClient.execute(httpGet);
+
+			// 判断返回值
+			int statusCode = remoteResponse.getStatusLine().getStatusCode();
+			if (statusCode >= 400) {
+				resp.sendError(statusCode, "fetch image error from "
+						+ contentUrl);
+				return;
+			}
+
+			HttpEntity entity = remoteResponse.getEntity();
+
+			// 设置Header
+			resp.setContentType(entity.getContentType().getValue());
+			if (entity.getContentLength() > 0) {
+				resp.setContentLength((int) entity.getContentLength());
+			}
+
+			// 输出内容
+			InputStream input = entity.getContent();
+			OutputStream output = resp.getOutputStream();
+			// 基于byte数组读取InputStream并直接写入OutputStream, 数组默认大小为4k.
+			IOUtils.copy(input, output);
+			output.flush();
+		} finally {
+			if (remoteResponse != null)
+				remoteResponse.close();
+		}
+	}
+
+}

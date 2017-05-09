@@ -1,0 +1,157 @@
+package com.nemo.mtest.utils;
+
+import jxl.Cell;
+import jxl.Sheet;
+import jxl.Workbook;
+import jxl.read.biff.BiffException;
+
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.collections.map.HashedMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+
+/**
+ * 数据导入工具类
+ * Created by nemo on 16-6-14.
+ */
+public class ExcelUtils {
+    private static final Logger logger = LoggerFactory.getLogger(ExcelUtils.class);
+    //成功
+    public static final Integer STATUS_OK = Integer.valueOf(1);
+    //失败
+    public static final Integer STATUS_NO = Integer.valueOf(0);
+    /**
+     * 私有化构造器
+     */
+    private ExcelUtils(){
+    }
+    /**
+     * 获取excel文件中的数据对象
+     *
+     * @param is                        excel
+     * @param excelColumnNames          excel中每个字段的英文名(应该与pojo对象的字段名一致,顺序与excel一致)
+     * @return                          excel每行是list一条记录，map是对应的"字段名-->值"
+     * @throws Exception
+     */
+    public static List<Map<String, String>> getImportData(InputStream is, List<String> excelColumnNames) throws Exception {
+        logger.debug("InputStream:{}", is);
+        if (is == null) {
+            return Collections.emptyList();
+        }
+        Workbook workbook = null;
+        try {
+            //拿到excel
+            workbook = Workbook.getWorkbook(is);
+        } catch (BiffException e) {
+            logger.error(e.getMessage(), e);
+            return Collections.EMPTY_LIST;
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            return Collections.EMPTY_LIST;
+        }
+        logger.debug("workbook:{}", workbook);
+        if (workbook == null) {
+            return Collections.emptyList();
+        }
+        //第一个sheet
+        Sheet sheet = workbook.getSheet(0);
+        //行数
+        int rowCounts = sheet.getRows() - 1;
+        logger.debug("rowCounts:{}", rowCounts);
+        List<Map<String, String>> list = new ArrayList<>(rowCounts - 1);
+        //双重for循环取出数据
+        for(int i = 1; i < rowCounts; i++){
+            Map<String, String> params = new HashedMap();
+            //i,j i:行 j:列
+            for(int j = 0; j < excelColumnNames.size(); j++){
+                Cell cell = sheet.getCell(j, i);
+                params.put(excelColumnNames.get(j), cell.getContents());
+            }
+            list.add(params);
+        }
+        return list;
+    }
+    /**
+     * 获取导入数据为对象的List
+     *
+     * @param data
+     * @param clazz
+     * @param excelColumnNames
+     * @param checkExcel
+     * @param <T>
+     * @return
+     * @throws Exception
+     */
+    public static <T> List<T> makeData(List<Map<String, String>> data, Class<T> clazz, List<String> excelColumnNames, CheckExcel checkExcel) throws Exception {
+        if(data == null || data.isEmpty() || clazz == null || checkExcel == null) {
+            return Collections.EMPTY_LIST;
+        }
+        List<T> result = new ArrayList<T>(data.size());
+        for(Map<String, String> d : data) {
+            if(checkExcel != null && !checkExcel.check(d)) {
+                continue;
+            }
+            T entity = clazz.newInstance();
+            for(String column : excelColumnNames) {
+                BeanUtils.setProperty(entity, column, d.get(column));
+            }
+            result.add(entity);
+        }
+        return result;
+    }
+
+    private static List<String> getBeanListStr(Class clazz){
+        Field[] fs = clazz.getFields();
+        Field f ;
+        List<String> res = new ArrayList<String>();
+        for(int i=0;i<fs.length;i++){
+            f = fs[i];
+                res.add(f.getName());
+        }
+        System.out.println(res);
+        return res;
+    }
+
+
+    public static  void main(String args[]){
+        try {
+
+//            private Long pnumber;// 承台层数
+//            private String hwd;// 承台长宽高
+//            private Double loss;// 承台圬工方
+//            private String centerM;// 中心里程
+//            private String pierNo;//所属墩号
+//            private Double startM;
+//            private Double endM;
+//            private Double capHeight;//承台顶高
+//            private Catalog cat;//所属类型
+
+            List<String> ls = new ArrayList<String>();
+            ls.add("pnumber");
+            ls.add("hwd");
+            ls.add("loss");
+            ls.add("centerM");
+            ls.add("pierNo");
+            ls.add("startM");
+            ls.add("endM");
+            ls.add("capHeight");
+            ls.add("cat");
+            InputStream is = new FileInputStream("/home/nemo/VirtualBox VMs/common/CT.xls");
+            List<Map<String,String>> res = getImportData(is,ls);
+            System.out.println(res);
+        }catch (Exception e){
+            e.printStackTrace();;
+        }
+    }
+
+}

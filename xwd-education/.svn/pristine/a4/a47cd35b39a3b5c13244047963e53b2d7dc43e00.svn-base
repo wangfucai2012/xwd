@@ -1,0 +1,76 @@
+package com.ict.web.modules.dataimport.service;
+
+import com.ict.web.commons.service.BaseService;
+import com.ict.web.modules.data.electricity.entity.baseDevice.NetElectricalArea;
+import com.ict.web.modules.data.sigg.dao.SignallingEqDao;
+import com.ict.web.modules.data.sigg.entity.SignallingEq;
+import com.ict.web.modules.dataimport.urils.AttachUtil;
+import com.ict.web.modules.dataimport.urils.BeanUtil;
+import com.ict.web.modules.dataimport.urils.ExcelUtils;
+import com.ict.web.modules.sys.entity.Attachment;
+import com.ict.web.modules.sys.entity.Catalog;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Created by nemo on 16-6-15.
+ */
+@Service
+@Transactional(readOnly = true)
+public class SignalImportService extends BaseService {
+
+    @Autowired
+    private MCatalogService mCatalogService;
+
+    @Autowired
+    private SignallingEqDao signallingEqDao;
+
+    public void importSignallingEq(Attachment attachment) {
+        try {
+            List<String> ls = new ArrayList<String>();
+
+//            private String name;// 设备名称
+//            private String steam;//行别
+//            private Catalog cat;//所属类型
+
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+
+            ls.add("name");
+            ls.add("centerM");
+            ls.add("steam");
+
+
+            InputStream is = new FileInputStream(AttachUtil.getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Catalog catalog = new Catalog();
+            NetElectricalArea nea = new NetElectricalArea();
+
+            for (int i = 0; i < res.size(); i++) {
+                SignallingEq entity = new SignallingEq();
+                BeanUtil.transMap2Bean2(res.get(i), entity);
+
+                catalog = mCatalogService.getCatalogByCode(entity.getEclsId());
+                if(catalog.getId()!=null) {
+                    entity.setCat(catalog);
+                    signallingEqDao.clear();
+                    signallingEqDao.save(entity);
+                    signallingEqDao.flush();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+}

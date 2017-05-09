@@ -1,0 +1,133 @@
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ include file="/WEB-INF/views/include/taglib.jsp"%>
+<%@ include file="/WEB-INF/views/include/upload.jsp"%>
+<script type="text/javascript" src="/jhgis/js/jquery-1.8.3.min.js"></script> 
+<script type="text/javascript" src="/jhgis/js/jquery.autocomplete.min.js"></script> 
+<html>
+<head>
+<meta name="decorator" content="default" />
+<title>桩基管理</title>
+	<script type="text/javascript">
+        $(document).ready(function() {
+            $("#loginName").focus();
+            $("#inputForm").validate({
+                submitHandler: function(form){
+                    loading('正在提交，请稍等...');
+                    form.submit();
+                },
+                errorContainer: "#messageBox",
+                errorPlacement: function(error, element) {
+                    $("#messageBox").text("输入有误，请先更正。");
+                    if (element.is(":checkbox")||element.is(":radio")||element.parent().is(".input-append")){
+                        error.appendTo(element.parent().parent());
+                    } else {
+                        error.insertAfter(element);
+                    }
+                }
+            });
+        });
+    </script>
+<style type="text/css">
+.table td i {
+	margin: 0 2px;
+}
+</style>
+	<script type="text/javascript">
+	$(function(){ 
+		$("#bridgeId").autocomplete({
+		    source: function( request, response ) {
+		        $.ajax({
+		            url: "${ctx}/data/work/bridge/getBridgeByAjax",
+		            dataType: "json",
+		            data:{
+		                content: request.term
+		            },
+		            success: function( data ) {
+		                response( $.map( data, function( item ) {
+		                    return {
+		                        label:item.bridgeName,
+		                        value:item.id,		                        
+		                    }
+		                }));
+		            }
+		        });
+		    },
+		    minLength: 1,
+		    select: function( event, ui ) {
+		        $("#bridgeId").val(ui.item.bridgeName);
+		    }
+		}); 
+	}); 
+	</script>
+</head>
+<body>
+<ul class="nav nav-tabs">
+		<li ><a href="${ctx}/data/work/pile?catalog=${pile.cat.id}">桩基列表</a></li>
+		<li class="active"><a href="${ctx}/data/work/pile/form?catalog=${pile.cat.id}">桩基添加</a></li>
+	</ul><br/>
+	<form:form id="inputForm" modelAttribute="pile" action="${ctx}/data/work/pile/save" method="post" class="form-horizontal">
+		<form:hidden path="id"/>
+		<form:hidden path="cat.id"/>
+		<sys:message msgcontent="${message}"/>
+		<div class="cs-detial1">
+			<table width="100%" border="0" align="center" cellpadding="0"
+			cellspacing="1" bgcolor="#dddddd" class="table table-striped table-bordered table-hover">
+				<tbody>
+					<tr>
+                        <td class="span2" align="center">所属桥梁:</td>
+						<td class="span3" align="left" >
+							<form:select path="bridge.id" class="input-middle" style="width:158px">
+								<form:option value="" label="请选择"/>
+								<form:options items="${listbri}" itemLabel="bridgeName" itemValue="id" htmlEscape="false" />
+							</form:select>
+						<font color="red">*</font>
+						</td>
+						<td class="span2" align="center">所属墩身:</td>
+						<td class="span3" align="left" >
+							<form:select path="pier.id" class="input-middle" style="width:158px">
+								<form:option value="" label="请选择"/>
+								<form:options items="${listPier}" itemLabel="pnumber" itemValue="id" htmlEscape="false" />
+							</form:select>
+						<font color="red">*</font></td>
+					</tr>
+					<tr>
+					    <td class="span2" align="center">设备编码:</td>
+						<td class="span3" align="left"><form:input path="ecode" htmlEscape="false" maxlength="50" class="required"/>&nbsp;</td>
+					    <td class="span2" align="center">钻孔数:</td>
+						<td class="span3" align="left"><form:input path="pnumber" htmlEscape="false" maxlength="50" class="required"/>&nbsp;</td>
+					</tr>
+					<tr>	
+						<td class="span2" align="center">钻孔直径:</td>
+						<td class="span3" align="left"><form:input path="diaM" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;</td>
+					    <td class="span2" align="center">钻孔长:</td>
+						<td class="span3" align="left"><form:input path="dlength" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+					</tr>
+					<tr>	
+						<td class="span2" align="center">桩基排列:</td>
+						<td class="span3" align="left"><form:input path="array" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+					    <td class="span2" align="center">桩基圬工方:</td>
+						<td class="span3" align="left"><form:input path="loss" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;</td>
+											
+					</tr>
+					<tr>	
+						<td class="span2" align="center">中心里程:</td>
+						<td class="span3" align="left"><form:input path="centerM" htmlEscape="false" maxlength="50" class="required abc"/>&nbsp;<font color="red">*</font></td>
+						<td class="span2" align="center"></td>
+						<td class="span3" align="left"></td>
+					</tr>
+				</tbody>
+				<tfoot>
+					<tr bgcolor="#ffffff">
+						<td colspan="4" align="center">
+							
+									<input id="btnSubmit" class="btn btn-primary" type="submit"
+										value="保 存" />&nbsp;
+							<input id="btnCancel" class="btn" type="button" value="返 回" onclick="history.go(-1)"/>
+						</td>
+					</tr>
+				</tfoot>
+			</table>
+		</div>		
+	</form:form>
+</body>
+</html>

@@ -1,0 +1,54 @@
+package com.ict.web.modules.inf.nk.web;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.ict.web.commons.web.BaseController;
+import com.ict.web.commons.web.Page;
+import com.ict.web.modules.inf.nk.entity.AddConductor;
+import com.ict.web.modules.inf.nk.service.AddConductorService;
+
+/**
+ * 
+ *  @description:附加导线驰度检测检修记录Controller
+ *  @author: lutao 
+ *  @create Date:2016年4月30日
+ */
+@Controller
+@RequestMapping(value = "inf/nk/addconductor")
+public class AddConductorController extends BaseController {
+	@Autowired
+	private AddConductorService service;
+	
+	@ModelAttribute
+	public AddConductor get(@RequestParam(required = false) Long id){
+		if(id != null){
+			return service.get(id);
+		}else{
+			return new AddConductor();
+		}
+	}
+	
+	@RequestMapping(value = { "list", "" })
+	public String list(AddConductor entity, HttpServletRequest request, HttpServletResponse response, Model model) {
+		Page<AddConductor> page = service.find(new Page<AddConductor>(request, response), entity);
+		
+		model.addAttribute("page", page);
+		model.addAttribute("addConductor", entity);
+		
+		return "modules/inf/nk/addConductorList";
+	}
+	
+	@RequestMapping(value = "view")
+	public String view(AddConductor entity, Model model) {
+		model.addAttribute("addConductor", entity);
+		return "modules/inf/nk/addConductorView";
+	}
+}

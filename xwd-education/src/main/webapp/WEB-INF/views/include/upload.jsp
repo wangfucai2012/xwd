@@ -1,0 +1,1 @@
+<script src="${ctxStatic}/multiple-file-upload/1.48/jquery.MultiFile.js" type="text/javascript"></script>

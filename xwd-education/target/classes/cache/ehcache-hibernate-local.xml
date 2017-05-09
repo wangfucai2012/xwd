@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ehcache updateCheck="false" name="hibernateCache">
+
+	<diskStore path="java.io.tmpdir/ehcache/account/hibernate" />
+
+	<!-- 指定除自身之外的网络群体中其他提供同步的主机列表，用“|”分开不同的主机 |//localhost:60000/XXX-->
+	<cacheManagerPeerProviderFactory
+		class="net.sf.ehcache.distribution.RMICacheManagerPeerProviderFactory"
+		properties="peerDiscovery=manual,rmiUrls=//localhost:40004" />
+	
+	<!-- 配宿主主机配置监听程序，来发现其他主机发来的同步请求，其他主机要端口不同啊！ -->
+	<cacheManagerPeerListenerFactory
+		class="net.sf.ehcache.distribution.RMICacheManagerPeerListenerFactory"
+		properties="port=40004,socketTimeoutMillis=120000" />
+
+
+	<!-- 默认缓存配置. -->
+	<!-- DefaultCache setting. -->
+	<defaultCache maxElementsInMemory="10000" eternal="false"
+        diskSpoolBufferSizeMB="30" maxElementsOnDisk="10000000"
+        diskPersistent="false" diskExpiryThreadIntervalSeconds="120"
+        memoryStoreEvictionPolicy="LRU"
+		timeToIdleSeconds="300" timeToLiveSeconds="600" overflowToDisk="true" />
+
+	<!-- 系统缓存 -->
+	<cache name="sysCache" maxElementsInMemory="500" eternal="true"
+		overflowToDisk="true" />
+
+	<!-- 用户缓存 -->
+	<cache name="userCache" maxElementsInMemory="500" eternal="true"
+		overflowToDisk="true" />
+
+	<!-- 工作流模块缓存 -->
+	<!-- <cache name="actCache" maxElementsInMemory="500" eternal="true" overflowToDisk="true"/> -->
+
+	<!-- 内容管理模块缓存 -->
+	<!-- <cache name="cmsCache" maxElementsInMemory="500" eternal="true" overflowToDisk="true"/> -->
+
+	<!-- 系统活动会话缓存 -->
+	<cache name="activeSessionsCache" maxElementsInMemory="10000"
+		overflowToDisk="true" eternal="true" timeToLiveSeconds="0"
+		timeToIdleSeconds="0" diskPersistent="true"
+		diskExpiryThreadIntervalSeconds="600" />
+
+	<!-- 简单页面缓存 <cache name="SimplePageCachingFilter" maxEntriesLocalHeap="100" 
+		eternal="false" overflowToDisk="true" timeToIdleSeconds="120" timeToLiveSeconds="120" 
+		memoryStoreEvictionPolicy="LFU"/> -->
+
+	<!-- cache name="com.ict.web.modules.sys.entity.User" maxEntriesLocalHeap="1000" 
+		eternal="true" overflowToDisk="true" maxEntriesLocalDisk="10000" /> <cache 
+		name="com.ict.web.modules.sys.entity.User.roleList" maxEntriesLocalHeap="1000" 
+		eternal="true" overflowToDisk="true" maxEntriesLocalDisk="10000" /> <cache 
+		name="com.ict.web.modules.sys.entity.User.roleList.Role" maxEntriesLocalHeap="100" 
+		eternal="true" overflowToDisk="true" maxEntriesLocalDisk="10000" /> -->
+	<!-- Special objects setting. <cache name="org.springside.examples.showcase.entity.User" 
+		maxEntriesLocalHeap="1000" eternal="true" overflowToDisk="true" maxEntriesLocalDisk="10000" 
+		/> <cache name="org.springside.examples.showcase.entity.User.roleList" maxEntriesLocalHeap="1000" 
+		eternal="true" overflowToDisk="true" maxEntriesLocalDisk="10000" /> <cache 
+		name="org.springside.examples.showcase.entity.Team" maxEntriesLocalHeap="100" 
+		eternal="true" overflowToDisk="true" maxEntriesLocalDisk="1000" /> <cache 
+		name="org.springside.examples.showcase.entity.Role" maxEntriesLocalHeap="100" 
+		eternal="true" overflowToDisk="true" maxEntriesLocalDisk="1000" /> -->
+</ehcache>

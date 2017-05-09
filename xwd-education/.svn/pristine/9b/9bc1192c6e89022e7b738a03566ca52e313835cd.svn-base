@@ -1,0 +1,13 @@
+package com.ict.web.modules.assetcard.dao;
+
+import com.ict.web.commons.dao.BaseDao;
+import com.ict.web.modules.assetcard.entity.AssetCard;
+import org.springframework.stereotype.Repository;
+
+/**
+ * 固资卡片的DAO层
+ * Created by nemo on 16-5-31.
+ */
+@Repository
+public class AssetCardDaos extends BaseDao<AssetCard> {
+}

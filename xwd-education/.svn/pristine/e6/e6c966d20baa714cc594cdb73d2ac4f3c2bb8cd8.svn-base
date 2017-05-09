@@ -1,0 +1,181 @@
+<%@ page contentType="text/html;charset=UTF-8"%>
+<%@ include file="/WEB-INF/views/include/taglib.jsp"%>
+<html>
+<head>
+<title>墩身管理</title>
+<%@ include file="/WEB-INF/views/include/upload.jsp"%>
+<meta name="decorator" content="default" />
+<style type="text/css">
+.table td i {
+	margin: 0 2px;
+}
+</style>
+<script type="text/javascript">
+	$(function() {
+		$(".cs-detial1 tbody").find("tr:odd")
+				.css("background-color", "#eff8ff");
+		$(".cs-detial1 tbody").find("tr:even").css("background-color", "#fff");
+	});
+	function delAttach(id, fileFlag) {
+		if (window.confirm("您确定要删除附件吗?")) {
+			$.post("${ctx}/data/work/pier/deleteAttach", {
+				attId : id,
+				id : "${pier.id}",
+				fileFlag : fileFlag
+			}, function(result) {
+				$("#id_" + id).remove();
+			});
+		}
+		return false;
+	}
+</script>
+</head>
+<body>
+	<ul class="nav nav-tabs">
+		<li ><a href="${ctx}/data/work/pier?catalog=${pier.cat.id}">墩身列表</a></li>
+		<li class="active"><a href="${ctx}/data/work/pier/form?catalog=${pier.cat.id}">墩身添加</a></li>
+	</ul>
+	<br />
+	<form:form id="inputForm" modelAttribute="pier"
+		action="${ctx}/data/work/pier/save" method="post"
+		enctype="multipart/form-data" class="form-horizontal">
+		<form:hidden path="id" />
+		<form:hidden path="cat.id"/>
+		<tags:message msgcontent="${message}" />
+		<div class="cs-detial1">
+			<table width="100%" border="0" align="center" cellpadding="0"
+				cellspacing="1" bgcolor="#dddddd" class="table table-striped table-bordered table-hover">
+				<tbody>
+				 <tr>
+                        <td class="span2" align="center">所属桥梁:</td>
+						<td class="span3" align="left" >
+						<form:select path="bridge.id" class="input-middle">
+								<form:options items="${listbri}" itemLabel="bridgeName"  itemValue="id"
+									htmlEscape="false" />
+							</form:select>
+						<font color="red">*</font></td>
+						<td class="span2" align="center">设备编码:</td>
+						<td class="span3" align="left"><form:input path="ecode" htmlEscape="false" maxlength="50" class="required"/>&nbsp;</td>
+					</tr>
+					<tr>
+						<td class="span2" align="center">墩台号:</td>
+						<td class="span3" align="left"><form:input path="pnumber"
+								htmlEscape="false" maxlength="50" class="required" />&nbsp;</td>
+						<td class="span2" align="center">墩身类型:</td>
+						<td class="span3" align="left"><form:input path="type"
+								htmlEscape="false" maxlength="50" class="required abc" />&nbsp;<font
+							color="red">*</font></td>
+					</tr>
+					<tr>
+					    <td class="span2" align="center">墩身长宽高:</td>
+						<td class="span3" align="left"><form:input path="hwd"
+								htmlEscape="false" maxlength="50" class="required" />&nbsp;<font
+							color="red">*</font></td>
+						<td class="span2" align="center">是否空心:</td>
+						<td class="span3" align="left"><form:input path="hollow"
+								htmlEscape="false" maxlength="50" class="required abc" />&nbsp;</td>
+						
+					</tr>
+					<tr>
+					    <td class="span2" align="center">空心宽度:</td>
+						<td class="span3" align="left"><form:input path="hwidth"
+								htmlEscape="false" maxlength="50" class="required" />&nbsp;<font
+							color="red">*</font></td>
+						<td class="span2" align="center">墩身圬工方:</td>
+						<td class="span3" align="left"><form:input path="loss"
+								htmlEscape="false" maxlength="50" class="required abc" />&nbsp;</td>
+						
+					</tr>
+					<tr>
+					    <td class="span2" align="center">中心里程:</td>
+						<td class="span3" align="left"><form:input path="centerM"
+								htmlEscape="false" maxlength="50" class="required abc" />&nbsp;<font
+							color="red">*</font></td>
+						<td class="span2" align="center">孔别:</td>
+						<td class="span3" align="left"><form:input path="hole"
+								htmlEscape="false" maxlength="50" class="required abc" />&nbsp;</td>
+						
+					</tr>
+					<tr>
+					    <td class="span2" align="center">墩顶高:</td>
+						<td class="span3" align="left"><form:input path="topHeight"
+								htmlEscape="false" maxlength="50" class="required abc" />&nbsp;<font
+							color="red">*</font></td>
+						<td class="span2" align="center">墩基底高:</td>
+						<td class="span3" align="left"><form:input path="baseHeight"
+								htmlEscape="false" maxlength="50" class="required abc" />&nbsp;</td>
+						
+					</tr>
+					<tr>
+					    <td class="span2" align="center">墩台定型图号:</td>
+						<td class="span3" align="left"><form:input path="drawNo"
+								htmlEscape="false" maxlength="50" class="required abc" />&nbsp;<font
+							color="red">*</font></td>
+						<td class="span2" align="center">最大冲刷线:</td>
+						<td class="span3" align="left"><form:input path="maxScourline"
+								htmlEscape="false" maxlength="50" class="required abc" />&nbsp;</td>
+						
+					</tr>
+					<tr>
+					    <td class="span2" align="center">墩材质:</td>
+						<td class="span3" align="left"><form:input path="material"
+								htmlEscape="false" maxlength="50" class="required abc" />&nbsp;<font
+							color="red">*</font></td>
+						<td class="span2" align="center">墩基础式样:</td>
+						<td class="span3" align="left"><form:input path="baseType"
+								htmlEscape="false" maxlength="50" class="required abc" />&nbsp;</td>
+						
+					</tr>
+					<tr>
+					    <td class="span2" align="center">墩基础材质:</td>
+						<td class="span3" align="left"><form:input path="basematerial"
+								htmlEscape="false" maxlength="50" class="required abc" />&nbsp;<font
+							color="red">*</font></td>
+						<td class="span2" align="center">墩基底地质:</td>
+						<td class="span3" align="left" colspan="3"><form:input path="baseGeology"
+								htmlEscape="false" maxlength="50" class="required abc" />&nbsp;</td>
+					</tr>
+					<tr>
+						<td class="span2" align="center">图片资料:</td>
+						<td colspan="3" align="left"><input class="multi" type="file"
+							name="pierfile" size="60" /> <font color="red">上传附件小于10M</font><br />
+							<c:choose>
+								<c:when test="${not empty pier.imgAttach}">
+									<c:forEach items="${pier.imgAttach}" var="attach">
+										<span id="id_${attach.id}"><a href="#"
+											onclick="return delAttach('${attach.id}','0');">删除</a>&nbsp;&nbsp;<a
+											href="${ctx}/sys/attachment/downloadImage?id=${attach.id}">${attach.fileName}</a><br />
+										</span>
+									</c:forEach>
+								</c:when>
+							</c:choose></td>
+					</tr>
+					<tr>
+						<td class="span2" align="center">图纸资料:</td>
+						<td colspan="3" align="left"><input class="multi" type="file"
+							name="pierfile2" size="60" /> <font color="red">上传附件小于10M</font><br />
+							<c:choose>
+								<c:when test="${not empty pier.fileAttach}">
+									<c:forEach items="${pier.fileAttach}" var="attach">
+										<span id="id_${attach.id}"><a href="#"
+											onclick="return delAttach('${attach.id}','1');">删除</a>&nbsp;&nbsp;<a
+											href="${ctx}/sys/attachment/downloadImage?id=${attach.id}">${attach.fileName}</a><br />
+										</span>
+									</c:forEach>
+								</c:when>
+							</c:choose></td>
+					</tr>
+				</tbody>
+				<tfoot>
+					<tr bgcolor="#ffffff">
+						<td colspan="4" align="center"><input id="btnSubmit"
+							class="btn btn-primary" type="submit" value="保 存" />&nbsp; <input
+							id="btnCancel" class="btn" type="button" value="返 回"
+							onclick="history.go(-1)" /></td>
+					</tr>
+				</tfoot>
+			</table>
+		</div>
+	</form:form>
+</body>
+</html>

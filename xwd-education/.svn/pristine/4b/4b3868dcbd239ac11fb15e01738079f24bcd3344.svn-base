@@ -1,0 +1,185 @@
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ include file="/WEB-INF/views/include/taglib.jsp"%>
+<html>
+<head>
+    <title>病害信息管理</title>
+    <meta name="decorator" content="default"/>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#loginName").focus();
+            $("#inputForm").validate({
+                submitHandler: function(form){
+                    loading('正在提交，请稍等...');
+                    form.submit();
+                },
+                errorContainer: "#messageBox",
+                errorPlacement: function(error, element) {
+                    $("#messageBox").text("输入有误，请先更正。");
+                    if (element.is(":checkbox")||element.is(":radio")||element.parent().is(".input-append")){
+                        error.appendTo(element.parent().parent());
+                    } else {
+                        error.insertAfter(element);
+                    }
+                }
+            });
+        });
+    </script>
+        <script type="text/javascript">
+        //删除附件
+        function delAttach(id,type) {
+            if (window.confirm("您确定要删除附件吗?")) {
+                if (type == 1) {
+                    var it = ',' + $('#imgAttachments').val();
+                    it = subIds(it,id);
+                    $('#imgAttachments').val(it);
+                } else if (type == 2) {
+                    var it = ',' + $('#attachments').val();
+                    it = subIds(it,id);
+                    $('#attachments').val(it);
+                }
+                //需要删除的附件ID
+                $('#delAttch').val($('#delAttch').val() + id + ',');
+                $("#id_" + id).remove();
+            }
+            return false;
+        }
+        //截取字符串
+        function subIds(it,id){
+            it = it.replace(',' + id + ',', '');
+            if (it.lastIndexOf(',') != it.length - 1) {
+                it += ',';
+            }
+            if (it.indexOf(',') == 0) {
+                it = it.substr(1);
+            }
+            return it;
+        }
+    </script>
+</head>
+<body>
+
+<ul class="nav nav-tabs">
+    <li><a href="${ctx}/data/disease/diseaseinfo">病害信息</a></li>
+    <li  class="active"><a href="${ctx}/data/disease/diseaseinfo/form">信息添加</a></li>
+</ul>
+
+<form:form id="inputForm" modelAttribute="diseaseInfo" action="${ctx}/data/disease/diseaseinfo/save" method="post"  enctype="multipart/form-data" >
+    <form:hidden path="id"/>
+    <sys:message msgcontent="${message}"/>
+    <div class="cs-detail">
+        <table class="table table-striped table-bordered table-hover">
+            <tbody>
+            <tr>
+                <td class="span2" align="center">病害名称:</td>
+                <td class="span3" style="text-align: left;">
+                    <form:input path="name" htmlEscape="false" maxlength="50" class="required userName"/>
+                </td>
+            </tr>
+            <tr>
+                <td class="span2" align="center">病害编码:</td>
+                <td class="span3" style="text-align: left;">
+                     <form:input path="code" htmlEscape="false" maxlength="50"  class="required userName"/>
+                </td>
+            </tr>
+            <tr>
+				<td class="span2" align="center">病害分类:</td>
+				<td class="span3" style="text-align: left;">
+					<sys:treeselect id="catalogParent" name="cat.id"  value="${diseaseInfo.cat.id}"  labelName="cat.names"  labelValue="${diseaseInfo.cat.names}" 
+					title="病害分类" url="/sys/catalog/treeData?types=1&grade=2&level=3" cssClass="required"/>
+				</td>
+			</tr>
+			<tr>
+						<td class="span2" align="center">病害分级:</td>
+						<td class="span3" align="left"><form:select path="level.id" class="input-middle">
+							<form:option value="" label="请选择"/>
+							<form:options items="${levelList}" itemLabel="name"  itemValue="id"
+									htmlEscape="false" />
+							</form:select>
+						</td>
+					</tr>
+				    <tr>
+					<td class="span2" align="center">登记日期:</td>
+					<td class="span3" align="left">
+					<input type="text" id="regDate" name="regDate" size="30"
+					value="<fmt:formatDate value='${diseaseInfo.regDate}' pattern="yyyy-MM-dd" type='date'/>" class="Wdate" onClick="WdatePicker();" />&nbsp;&nbsp;
+					</td>					
+
+					</tr>
+					<tr>
+						<td class="span2" align="center">所在线路:</td>
+						<td class="span3" align="left"><form:input path="line" htmlEscape="false" maxlength="50"/></td>
+					</tr>
+					<tr>	
+						<td class="span2" align="center">病害里程:</td>
+						<td class="span3" align="left">
+						&nbsp;&nbsp;K&nbsp;&nbsp;<form:input path="locationKilo" htmlEscape="false" maxlength="8" class="input-small"/>&nbsp;&nbsp;+&nbsp;&nbsp;<form:input path="locationMeter" htmlEscape="false" class="input-small" maxlength="20"/></td>
+					</tr>
+					<tr>
+						<td class="span2" align="center">详细位置:</td>
+						<td class="span3" colspan="3" align="left"><form:input path="locationDsp" htmlEscape="false" maxlength="50"/></td>
+					</tr>
+					<tr>
+						<td class="span2" align="center">问题描述:</td>
+						<td class="span3" colspan="3" align="left"><form:textarea path="issuedsp" cols="80"  row="10" 
+						        htmlEscape="false" maxlength="200" class="input-xxxlarge"/></td>
+					</tr>
+					<tr>
+						<td class="span2" align="center">采取措施:</td>
+						<td class="span6" colspan="3" align="left"><form:textarea path="maintainstep" cols="80"  row="10" 
+						        htmlEscape="false" maxlength="200" width="80%" class="input-xxxlarge"/></td>
+					</tr>
+					<tr>
+						<td class="span2" align="center">排序:</td>
+						<td class="span3" align="left"><form:input path="sort" htmlEscape="false" maxlength="50"/></td>
+				    </tr>
+					<tr>	
+						<td class="span2" align="center">备注:</td>
+						<td class="span3" align="left"><form:input path="remark" htmlEscape="false" maxlength="50"/></td>
+					</tr>
+					<tr>
+                <td class="span2">图片资料:</td>
+                <td colspan="3" align="left">
+                    <input type="hidden" name="delAttch" id="delAttch" />
+                    <input class="multi" type="file" name="pierfile" size="60" /> <font color="red">上传附件小于10M</font><br />
+                    <form:hidden path="imgAttachments" />
+                    <c:choose>
+                        <c:when test="${not empty imgAtts}">
+                            <c:forEach items="${imgAtts}" var="attach">
+										<span id="id_${attach.id}">
+                                            <a href="#" onclick="return delAttach('${attach.id}',1);">删除</a>&nbsp;&nbsp;
+                                            <a href="${ctx}/sys/attachment/download?id=${attach.id}">${attach.fileName}</a><br />
+										</span>
+                            </c:forEach>
+                        </c:when>
+                    </c:choose>
+                </td>
+            </tr>
+            <tr>
+                <td class="span2">图纸资料:</td>
+                <td colspan="3" align="left">
+                    <input class="multi" type="file" name="pierfile2" size="60" typ /> <font color="red">上传附件小于10M</font><br />
+                    <form:hidden path="attachments" />
+                    <c:choose>
+                        <c:when test="${not empty atts}">
+                            <c:forEach items="${atts}" var="attach">
+										<span id="id_${attach.id}">
+                                            <a href="#" onclick="return delAttach('${attach.id}',2);">删除</a>&nbsp;&nbsp;
+                                            <a href="${ctx}/sys/attachment/download?id=${attach.id}">${attach.fileName}</a><br />
+										</span>
+                            </c:forEach>
+                        </c:when>
+                    </c:choose>
+                </td>
+            </tr>
+			<tr>	
+                <td colspan="2">
+                    <shiro:hasPermission name="sys:user:edit"><input id="btnSubmit" class="btn btn-primary" type="submit" value="保 存"/>&nbsp;</shiro:hasPermission>
+                    <input id="btnCancel" class="btn" type="button" value="返 回" onclick="history.go(-1)"/>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</form:form>
+</body>
+</html>

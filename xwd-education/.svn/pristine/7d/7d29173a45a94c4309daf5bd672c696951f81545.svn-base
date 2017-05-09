@@ -1,0 +1,84 @@
+
+<%@ page contentType="text/html;charset=UTF-8"%>
+<%@ include file="/WEB-INF/views/include/taglib.jsp"%>
+<html>
+<head>
+    <title>工务设备通用类管理</title>
+    <meta name="decorator" content="default" />
+    <%@include file="/WEB-INF/views/include/dialog.jsp"%>
+    <style type="text/css">
+        .sort {
+            color: #0663A2;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        //分页调用JS
+        function page(n, s) {
+            $("#pageNo").val(n);
+            $("#pageSize").val(s);
+            $("#searchForm").attr("action", "${ctx}/data/work/workeq?catalog=${workEq.cat.id}");
+            $("#searchForm").submit();
+            return false;
+        }
+    </script>
+</head>
+<body>
+<input type="hidden"  value="${workEq.cat.id}" />
+<ul class="nav nav-tabs">
+    <li class="active"><a href="${ctx}/data/work/workeq?catalog=${catalog}">设备列表</a></li>
+    <li  ><a href="${ctx}/data/work/workeq/form?catalog=${catalog}">设备添加</a></li>
+</ul>
+
+<!--查询框start-->
+<form:form id="searchForm" modelAttribute="workEq"
+           method="post"
+           class="breadcrumb form-search">
+    <input id="pageNo" name="pageNo" type="hidden" value="${page.pageNo}" />
+    <input id="pageSize" name="pageSize" type="hidden"
+           value="${page.pageSize}" />
+    <input id="orderBy" name="orderBy" type="hidden"
+           value="${page.orderBy}" />
+   <input type="hidden" name="catalog" value="${catalog}" />
+		<input id="cat" type="hidden" name="cat.id" value="${workEq.cat.id}"/>
+		<label>名称 ：</label>
+		<form:input path="name" htmlEscape="false" maxlength="50" class="input-medium"/>
+				&nbsp;&nbsp;	<input id="btnSubmit" class="btn btn-primary" type="submit"  value="查询" />
+				&nbsp;&nbsp;	<input id="btnReset" class="btn" type="reset" value="重置"/>
+</form:form>
+<!--查询框end-->
+
+<sys:message msgcontent="${message}" />
+<table id="contentTable" class="table table-striped table-bordered table-hover">
+    <thead>
+    <tr>
+        <th style="text-align: center;">序号</th>
+        <th style="text-align: center;">设备名称</th>
+        <shiro:hasPermission name="sys:user:edit">
+            <th style="text-align: center;">操作</th>
+        </shiro:hasPermission>
+    </tr>
+    </thead>
+    <tbody>
+    <c:forEach items="${page.list}" var="list" varStatus="i">
+        <tr>
+            <td>${(page.pageNo-1)*page.pageSize + (i.index+1)}</td>
+            <td>${list.name}</td>
+            <shiro:hasPermission name="sys:user:edit">
+                <td><a href="${ctx}/data/work/workeq/form?id=${list.id}&catalog=${list.cat.id}">修改</a> <a
+                        href="${ctx}/data/work/workeq/delete?id=${list.id}&catalog=${list.cat.id}"
+                        onclick="return confirmx('确认要删除该数据吗？', this.href)">删除</a></td>
+            </shiro:hasPermission>
+        </tr>
+    </c:forEach>
+    </tbody>
+    <tfoot>
+    <tr>
+        <td colspan="8">
+            <div class="pagination">${page}</div>
+        </td>
+    </tr>
+    </tfoot>
+</table>
+</body>
+</html>

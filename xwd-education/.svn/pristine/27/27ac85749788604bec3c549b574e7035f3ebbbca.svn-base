@@ -1,0 +1,1012 @@
+package com.ict.web.modules.dataimport.service;
+
+import com.ict.web.commons.service.BaseService;
+import com.ict.web.modules.data.electricity.dao.tem.*;
+import com.ict.web.modules.data.electricity.entity.tem.*;
+import com.ict.web.modules.dataimport.urils.AttachUtil;
+import com.ict.web.modules.dataimport.urils.BeanUtil;
+import com.ict.web.modules.dataimport.urils.ExcelUtils;
+import com.ict.web.modules.data.electricity.dao.baseDevice.SubstationDao;
+import com.ict.web.modules.data.electricity.dao.cne.BasicNetBarDao;
+import com.ict.web.modules.data.electricity.entity.baseDevice.NetElectricalArea;
+import com.ict.web.modules.data.electricity.entity.baseDevice.Substation;
+import com.ict.web.modules.data.electricity.entity.cne.BasicNetBar;
+import com.ict.web.modules.sys.entity.Attachment;
+import com.ict.web.modules.sys.entity.Catalog;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Created by nemo on 16-6-15.
+ */
+@Service
+@Transactional(readOnly = true)
+public class ElectDataImportService extends BaseService {
+
+
+    @Autowired
+    private GsuDao gsuDao;
+    public void importGsu(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private AssetCard assetCard;//所属固资卡片
+//            private String lineName;//线名
+//            private String name;//名称
+//            private String type;//型号
+//            private Substation substation;//所属变电所
+//            private String cstu;//装置结构
+//            private Office officeName;//所属部门
+//            private String institution;//单位
+//            private String simpleInstitution; //单位名称缩写
+//            private String runNumber;//运行编号
+//            private String standardV;//额定电压
+//            private String standardA;//额定电流
+//            private String kva;//额定容量
+//            private String phaseNumber;//相数
+//            private String wiringGroup;//接线组别
+//            private String coolingMode;//冷却方式
+//            private String noLoadCurrent;//空载电流
+//            private String noLoadLoss;//空载损耗
+//            private String shortCircuitLoss;//短路损耗
+//            private String shortCircuitImpedance;//短路阻抗
+//            private String insulatingOilNumber;//绝缘油号
+//            private String heavyOil;//油重
+//            private String bodyWeight;//器身重
+//            private String attchWeight;//附件重
+//            private String countWeight;//总重
+//            private String state;//状态
+//            private String manufacturer;//生产厂家
+//            private String dateOfProduction;//出厂日期
+//            private String serialNumber;//出厂序号
+//            private String installDate;//安装日期
+//            private String commissioningDate;//投运日期
+//            private String note;//备注
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("institution");
+            ls.add("simpleInstitution");
+            ls.add("name");
+            ls.add("type");
+            ls.add("runNumber");
+            ls.add("standardV");
+            ls.add("standardA");
+            ls.add("kva");
+            ls.add("phaseNumber");
+            ls.add("wiringGroup");
+            ls.add("coolingMode");
+            ls.add("noLoadCurrent");
+            ls.add("noLoadLoss");
+            ls.add("shortCircuitLoss");
+            ls.add("shortCircuitImpedance");
+            ls.add("insulatingOilNumber");
+            ls.add("heavyOil");
+            ls.add("bodyWeight");
+            ls.add("attchWeight");
+            ls.add("countWeight");
+            ls.add("state");
+            ls.add("manufacturer");
+            ls.add("dateOfProduction");
+            ls.add("serialNumber");
+            ls.add("installDate");
+            ls.add("commissioningDate");
+            ls.add("note");
+
+
+            InputStream is = new FileInputStream(AttachUtil.getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+
+            Substation substation = new Substation();
+            substation.setId(7L);
+
+            Catalog catalog = new Catalog();
+
+            for(int i=0;i<res.size();i++) {
+                Gsu entity = new Gsu();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+
+                String name = res.get(i).get("name").toString();
+
+                if(name.equals("牵引变压器")){
+                    catalog.setId(130L);
+                }else if(name.equals("动力变压器")){
+                    catalog.setId(132L);
+                }else if(name.equals("自用变压器")){
+                    catalog.setId(133L);
+                }else if(name.equals("自耦变压器")){
+                    catalog.setId(134L);
+                }
+
+                entity.setCata(catalog);
+                entity.setSubstation(substation);
+                gsuDao.clear();
+                gsuDao.save(entity);
+                gsuDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
+    @Autowired
+    private GaoyaplatDao gaoyaplatDao;
+    public void importGaoyaPlat(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//             private String unitName;//单位名称
+//            private String type;//规格型号
+//            private String runNumber;//运行编号
+//            private String ratedVoltage;//额定电压
+//            private String mainUnit;//主要部件构成
+//            private String manufacturer;//生产厂家
+//            private String serialNumber;//出厂序号
+//            private String productionDate;//出厂日期
+//            private String commissioningDate;//投运日期
+//            private String remarks;//备注
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("unitName");
+            ls.add("type");
+            ls.add("runNumber");
+            ls.add("ratedVoltage");
+            ls.add("mainUnit");
+            ls.add("manufacturer");
+            ls.add("serialNumber");
+            ls.add("productionDate");
+            ls.add("commissioningDate");
+            ls.add("remarks");
+            InputStream is = new FileInputStream(AttachUtil.getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Catalog catalog = new Catalog(114L);
+
+            for(int i=0;i<res.size();i++) {
+                Gaoyaplat entity = new Gaoyaplat();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCata(catalog);
+                gaoyaplatDao.clear();
+                gaoyaplatDao.save(entity);
+                gaoyaplatDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @Autowired
+    private SwitcheqDao switcheqDao;
+
+    /**
+     * 断路器
+     * @param attachment
+     */
+    public void importSwitcheq(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private String name;//名称
+//            private String type;//型号
+//            private Substation substation;//所属变电所
+//            private String ctype;//断路器
+//            private String dtype;//隔离开关
+//            private String ltype;//负荷开关
+//            private String htype;//高压熔断器
+//            private Office officeName;//所属部门
+//            private String institution;//单位
+//            private String runNum;//运行编号
+//            private String standardV;//额定电压
+//            private String standardA;//额定电流
+//            private String kva;//额定断流容量
+//            private String officeType;//机构类别
+//            private String flowMutualModel;//流互型号
+//            private String flowChangeRatio;//流互变比
+//            private String gasPressure;//气体压力
+//            private String countWeight;//总重
+//            private String state;//状态
+//            private String manufacturer;//生产厂家
+//            private String serialNumber;//出厂序号
+//            private String dateOfProduction;//出厂日期
+//            private String commissioningDate;//投运日期
+//            private String note;//备注
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("name");
+            ls.add("runNum");
+            ls.add("type");
+            ls.add("standardV");
+            ls.add("standardA");
+            ls.add("kva");
+            ls.add("officeType");
+            ls.add("flowMutualModel");
+            ls.add("flowChangeRatio");
+            ls.add("gasPressure");
+            ls.add("countWeight");
+            ls.add("state");
+            ls.add("manufacturer");
+            ls.add("serialNumber");
+            ls.add("dateOfProduction");
+            ls.add("commissioningDate");
+            ls.add("note");
+            InputStream is = new FileInputStream(AttachUtil.getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Catalog catalog = new Catalog(229L);
+            Substation substation = new Substation();
+            substation.setId(7L);
+
+            for(int i=0;i<res.size();i++) {
+                Switcheq entity = new Switcheq();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCata(catalog);
+                entity.setSubstation(substation);
+                switcheqDao.clear();
+                switcheqDao.save(entity);
+                switcheqDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @Autowired
+    private SubstationDao substationDao;
+    public void importSubstation(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private String lineName;//线名
+//            private Dict led;//类别名称
+//            private String name;// 变电所名称
+//            private Long length;// 运营里程
+//            private Office officeName;// 所属部门
+//            private String midLength;//中心里程
+//            private Double offset;//偏移
+//            private String siteWall;//位置墙
+//            private Office manageName;//运营单位
+//            private String supAbility;//供电能力
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("gclsId");
+            ls.add("eclsId");
+            ls.add("gcode");
+            ls.add("ecode");
+            ls.add("name");
+            ls.add("midLength");
+            ls.add("centerM");
+            InputStream is = new FileInputStream(AttachUtil.getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Catalog catalog = new Catalog(229L);
+
+            for(int i=0;i<res.size();i++) {
+                Substation entity = new Substation();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                substationDao.clear();
+                substationDao.save(entity);
+                substationDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 隔离开关
+     * @param attachment
+     */
+    public void importSwitcheq1(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private String name;//名称
+//            private String type;//型号
+//            private Substation substation;//所属变电所
+//            private String ctype;//断路器
+//            private String dtype;//隔离开关
+//            private String ltype;//负荷开关
+//            private String htype;//高压熔断器
+//            private Office officeName;//所属部门
+//            private String institution;//单位
+//            private String runNum;//运行编号
+//            private String standardV;//额定电压
+//            private String standardA;//额定电流
+//            private String kva;//额定断流容量
+//            private String officeType;//机构类别
+//            private String flowMutualModel;//流互型号
+//            private String flowChangeRatio;//流互变比
+//            private String gasPressure;//气体压力
+//            private String countWeight;//总重
+//            private String state;//状态
+//            private String manufacturer;//生产厂家
+//            private String serialNumber;//出厂序号
+//            private String dateOfProduction;//出厂日期
+//            private String commissioningDate;//投运日期
+//            private String note;//备注
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("name");
+            ls.add("runNum");
+            ls.add("type");
+            ls.add("standardV");
+            ls.add("standardA");
+            ls.add("state");
+            ls.add("manufacturer");
+            ls.add("serialNumber");
+            ls.add("dateOfProduction");
+            ls.add("commissioningDate");
+            ls.add("note");
+
+            InputStream is = new FileInputStream(AttachUtil.getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Catalog catalog = new Catalog(112L);
+            Substation substation = new Substation();
+            substation.setId(7L);
+
+            for(int i=0;i<res.size();i++) {
+                Switcheq entity = new Switcheq();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCata(catalog);
+                entity.setSubstation(substation);
+                switcheqDao.clear();
+                switcheqDao.save(entity);
+                switcheqDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 负荷开关
+     * @param attachment
+     */
+    public void importSwitcheq2(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private String name;//名称
+//            private String type;//型号
+//            private Substation substation;//所属变电所
+//            private String ctype;//断路器
+//            private String dtype;//隔离开关
+//            private String ltype;//负荷开关
+//            private String htype;//高压熔断器
+//            private Office officeName;//所属部门
+//            private String institution;//单位
+//            private String runNum;//运行编号
+//            private String standardV;//额定电压
+//            private String standardA;//额定电流
+//            private String kva;//额定断流容量
+//            private String officeType;//机构类别
+//            private String flowMutualModel;//流互型号
+//            private String flowChangeRatio;//流互变比
+//            private String gasPressure;//气体压力
+//            private String countWeight;//总重
+//            private String state;//状态
+//            private String manufacturer;//生产厂家
+//            private String serialNumber;//出厂序号
+//            private String dateOfProduction;//出厂日期
+//            private String commissioningDate;//投运日期
+//            private String note;//备注
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("name");
+            ls.add("runNum");
+            ls.add("type");
+            ls.add("standardV");
+            ls.add("standardA");
+            ls.add("officeType");
+            ls.add("manufacturer");
+            ls.add("dateOfProduction");
+            ls.add("serialNumber");
+            ls.add("commissioningDate");
+            ls.add("note");
+
+            InputStream is = new FileInputStream(AttachUtil.getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Catalog catalog = new Catalog(113L);
+            Substation substation = new Substation();
+            substation.setId(7L);
+
+            for(int i=0;i<res.size();i++) {
+                Switcheq entity = new Switcheq();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCata(catalog);
+                entity.setSubstation(substation);
+                switcheqDao.clear();
+                switcheqDao.save(entity);
+                switcheqDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
+    @Autowired
+    private CurtsfDao curtsfDao;
+
+    /**
+     * 电压互感器
+     * @param attachment
+     */
+    public void importCurtsf(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private String lineName;//线名
+//            private String name;//名称
+//            private String type;//型号
+//            private Substation substation;//所属变电所
+//            private String itype;//电流互感器型号
+//            private String vtype;//电压互感器型号
+//            private Office officeName;//所属部门
+//            private String institution;//单位
+//            private String standardV;//额定电压
+//            private String voltageRatio;//电压比
+//            private String levelCapacity0_5;//0.5级容量
+//            private String levelCapacity1;//1级容量
+//            private String levelCapacity3;//3级容量
+//            private String maxCapacity;//最大容量
+//            private String phaseNumber;//相数
+//            private String insulatingOilNumber;//绝缘油号
+//            private String countWeight;//总重
+//            private String state;//状态
+//            private String manufacturer;//生产厂家
+//            private String serialNumber;//出厂序号
+//            private String dateOfProduction;//出厂日期
+//            private String commissioningDate;//投运日期
+//            private String node;//备注
+//            private String year;//年度
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("name");
+            ls.add("aaaaaaaaaaaaaaaa");//占位用
+            ls.add("runNum");
+            ls.add("type");
+            ls.add("standardV");
+            ls.add("voltageRatio");
+            ls.add("levelCapacity0_5");
+            ls.add("levelCapacity1");
+            ls.add("levelCapacity3");
+            ls.add("maxCapacity");
+            ls.add("phaseNumber");
+            ls.add("insulatingOilNumber");
+            ls.add("countWeight");
+            ls.add("state");
+            ls.add("manufacturer");
+            ls.add("serialNumber");
+            ls.add("dateOfProduction");
+            ls.add("commissioningDate");
+            ls.add("node");
+            ls.add("year");
+
+            InputStream is = new FileInputStream(AttachUtil.getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Catalog catalog = new Catalog(118L);
+            Substation substation = new Substation();
+            substation.setId(7L);
+
+            for(int i=0;i<res.size();i++) {
+                Curtsf entity = new Curtsf();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCata(catalog);
+                entity.setSubstation(substation);
+                curtsfDao.clear();
+                curtsfDao.save(entity);
+                curtsfDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 电流互感器
+     * @param attachment
+     */
+    public void importCurtsf1(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private String lineName;//线名
+//            private String name;//名称
+//            private String type;//型号
+//            private Substation substation;//所属变电所
+//            private String itype;//电流互感器型号
+//            private String vtype;//电压互感器型号
+//            private Office officeName;//所属部门
+//            private String institution;//单位
+//            private String standardV;//额定电压
+//            private String voltageRatio;//电压比
+//            private String levelCapacity0_5;//0.5级容量
+//            private String levelCapacity1;//1级容量
+//            private String levelCapacity3;//3级容量
+//            private String maxCapacity;//最大容量
+//            private String phaseNumber;//相数
+//            private String insulatingOilNumber;//绝缘油号
+//            private String countWeight;//总重
+//            private String state;//状态
+//            private String manufacturer;//生产厂家
+//            private String serialNumber;//出厂序号
+//            private String dateOfProduction;//出厂日期
+//            private String commissioningDate;//投运日期
+//            private String node;//备注
+//            private String year;//年度
+
+//            private String standardA;//额定电流
+//            private String currentRatio;//电流比
+//            private String coilLoad1;//线圈1负荷
+//            private String coilLoad2;//线圈2负荷
+//            private String coilLevel1;//线圈1等级
+//            private String coilLevel2;//线圈2等级
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("name");
+            ls.add("aaaaaaaaaaaaaaaa");//占位用
+            ls.add("runNum");
+            ls.add("type");
+            ls.add("standardV");
+            ls.add("standardA");
+            ls.add("insulatingOilNumber");
+            ls.add("countWeight");
+            ls.add("currentRatio");
+            ls.add("coilLevel1");
+            ls.add("coilLoad1");
+            ls.add("coilLevel2");
+            ls.add("coilLoad2");
+            ls.add("state");
+            ls.add("manufacturer");
+            ls.add("serialNumber");
+            ls.add("dateOfProduction");
+            ls.add("commissioningDate");
+            ls.add("node");
+            ls.add("year");
+
+            InputStream is = new FileInputStream(AttachUtil.getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Catalog catalog = new Catalog(119L);
+            Substation substation = new Substation();
+            substation.setId(7L);
+
+            for(int i=0;i<res.size();i++) {
+                Curtsf entity = new Curtsf();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCata(catalog);
+                entity.setSubstation(substation);
+                curtsfDao.clear();
+                curtsfDao.save(entity);
+                curtsfDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @Autowired
+    private SurgearresterDao surgearresterDao;
+
+    /**
+     * 避雷器
+     * @param attachment
+     */
+    public void importSurgearrester(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private String lineName;//线名
+//            private String name;//名称
+//            private String type;//型号
+//            private Substation substation;//所属变电所
+//            private String cstu;//装置结构
+//            private Office officeName;//所属部门
+//            private String institution;//单位
+
+//            private String runNum;//运行编号
+//            private String casingMaterial;//套管材质
+//            private String standardV;//额定电压
+//            private String standardA;//额定电流
+//            private String category;//类别
+//            private String manufacturer;//生产厂家
+//            private String serialNumber;//出厂序号
+//            private String dateOfProduction;//出厂日期
+//            private String commissioningDate;//投运日期
+//            private String note;//备注
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+
+            ls.add("aaaaaaaaaaaaaaaa");//占位用
+            ls.add("runNum");
+            ls.add("type");
+            ls.add("casingMaterial");
+            ls.add("standardV");
+            ls.add("category");
+            ls.add("manufacturer");
+            ls.add("dateOfProduction");
+            ls.add("commissioningDate");
+            ls.add("node");
+
+            InputStream is = new FileInputStream(AttachUtil.getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Catalog catalog = new Catalog(136L);
+            Substation substation = new Substation();
+            substation.setId(7L);
+
+            for(int i=0;i<res.size();i++) {
+                Surgearrester entity = new Surgearrester();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCata(catalog);
+                entity.setSubstation(substation);
+                surgearresterDao.clear();
+                surgearresterDao.save(entity);
+                surgearresterDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 避雷针
+     * @param attachment
+     */
+    public void importSurgearrester1(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private String lineName;//线名
+//            private String name;//名称
+//            private String type;//型号
+//            private Substation substation;//所属变电所
+//            private String cstu;//装置结构
+//            private Office officeName;//所属部门
+//            private String institution;//单位
+
+//            private String runNum;//运行编号
+//            private String casingMaterial;//套管材质
+//            private String standardV;//额定电压
+//            private String standardA;//额定电流
+//            private String category;//类别
+//            private String manufacturer;//生产厂家
+//            private String serialNumber;//出厂序号
+//            private String dateOfProduction;//出厂日期
+//            private String commissioningDate;//投运日期
+//            private String note;//备注
+//            private String height;//高度
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+
+            ls.add("aaaaaaaaaaaaaaaa");//占位用
+            ls.add("type");
+            ls.add("runNum");
+            ls.add("height");
+            ls.add("category");
+            ls.add("manufacturer");
+            ls.add("dateOfProduction");
+            ls.add("commissioningDate");
+            ls.add("node");
+
+            InputStream is = new FileInputStream(AttachUtil.getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Catalog catalog = new Catalog(138L);
+            Substation substation = new Substation();
+            substation.setId(7L);
+
+            for(int i=0;i<res.size();i++) {
+                Surgearrester entity = new Surgearrester();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCata(catalog);
+                entity.setSubstation(substation);
+                surgearresterDao.clear();
+                surgearresterDao.save(entity);
+                surgearresterDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @Autowired
+    private ComautoeqDao comautoeqDao;
+    public void importComAutoeq(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private String lineName;//线名
+//            private String name;//名称
+//            private String type;//型号
+//            private Substation substation;//所属变电所
+//            private String outNo;//出厂序号
+//            private Office officeName;//所属部门
+//            private String institution;//单位
+//            private String cstu;//装置结构
+//            private String manufacturer;//生产厂家
+//            private String serialNumber;//出厂序号
+//            private String dateOfProduction;//出厂日期
+//            private String commissioningDate;//投运日期
+//            private String node;//备注
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("name");
+            ls.add("type");
+            ls.add("manufacturer");
+            ls.add("serialNumber");
+            ls.add("dateOfProduction");
+            ls.add("commissioningDate");
+            ls.add("node");
+
+            InputStream is = new FileInputStream(AttachUtil.getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Catalog catalog = new Catalog(41L);
+            Substation substation = new Substation();
+            substation.setId(7L);
+
+            for(int i=0;i<res.size();i++) {
+                Comautoeq entity = new Comautoeq();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCata(catalog);
+                entity.setSubstation(substation);
+                comautoeqDao.clear();
+                comautoeqDao.save(entity);
+                comautoeqDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
+    @Autowired
+    private TelecontroleqDao telecontroleqDao;
+    public void importTelecontroleq(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//           private AssetCard assetCard;//所属固资卡片
+//            private String lineName;//线名
+//            private String name;//名称
+//            private String type;//型号
+//            private Substation substation;//所属变电所
+//            private String cstu;//装置结构
+//            private Office officeName;//所属部门
+//            private String institution;//单位
+
+//            private String rtuNumber;//RTU数量
+//            private String controlGroup;//控制群数量
+//            private String serialNumber;//出厂序号
+//            private String dateOfProduction;//出厂日期
+//            private String commissioningDate;//投运日期
+//            private String node;//备注
+
+//            protected String gclsId; // 地理信息分类码
+//            protected String eclsId; // 资产设备分类码
+//            protected String gcode; // 地理信息顺序号
+//            protected String ecode; // 资产设备顺序号
+//            protected String centerM; // 中心里程
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("type");
+            ls.add("rtuNumber");
+            ls.add("controlGroup");
+            ls.add("manufacturer");
+            ls.add("dateOfProduction");
+            ls.add("commissioningDate");
+            ls.add("node");
+
+            InputStream is = new FileInputStream(AttachUtil.getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Catalog catalog = new Catalog(127L);
+            Substation substation = new Substation();
+            substation.setId(7L);
+
+            for(int i=0;i<res.size();i++) {
+                Telecontroleq entity = new Telecontroleq();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+                entity.setCata(catalog);
+                entity.setSubstation(substation);
+                telecontroleqDao.clear();
+                telecontroleqDao.save(entity);
+                telecontroleqDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @Autowired
+    private BasicNetBarDao basicNetBarDao;
+    public void importBasicNetBar(Attachment attachment){
+        try {
+            List<String> ls = new ArrayList<String>();
+//            private PowerSupplySection powerSupplySection;//所属供电区间
+//            private String blockId;//区间（站场）id
+//            private String block;//区间（站场）
+//            private String pole;//所属支柱
+//            private Office office;//所属部门
+//            private NetElectricalArea netElectricalArea;//所属网电工区
+//            private String equipCode;//设备编码
+//            private String trackNumber;//股道号
+//            private String line;//线路条件
+//            private String levelLayout;//路面平面布置
+//            private String span;//跨距
+//            private String slopeLimit;//侧面限界
+//            private String outHeight;//外轨超高
+//            private String touchSuspension;//接触悬挂
+//            private String afLine;//AF线
+//            private String pwLine;//PW(回流)线
+//            private String jqLine;//jq线
+//            private String supplierLine;//供电线
+//            private String suckLine;//吸上线
+//            private String insulateSwitch;//隔离开关
+//            private String lightProtected;//避雷器
+//            private String segInsulation;//分段绝缘器
+//            private String phaseInsulation;//分相绝缘器
+//            private String downAnchor;//下锚装置
+//            private String brand;//标志牌
+//            private String pulloutBei;//拉出值北京侧
+//            private String pulloutMiddle;//拉出值中间侧
+//            private String pulloutShang;//拉出值上海侧
+//            private String heightBei;//设计导高北京侧
+//            private String heightMiddle;//设计导高中间侧
+//            private String heightShang;//设计导高上海侧
+//            private String nfcCode;//NFC标签
+
+            ls.add("eclsId");
+            ls.add("ecode");
+            ls.add("gclsId");
+            ls.add("gcode");
+            ls.add("blockId");
+            ls.add("block");
+            ls.add("pole");
+            ls.add("nea_name");//所属网电工区名称
+            ls.add("equipCode");
+            ls.add("trackNumber");
+            ls.add("nfcCode");
+            ls.add("line");
+            ls.add("levelLayout");
+            ls.add("centerM");
+            ls.add("span");
+            ls.add("slopeLimit");
+            ls.add("outHeight");
+            ls.add("touchSuspension");
+            ls.add("afLine");
+            ls.add("pwLine");
+            ls.add("jqLine");
+            ls.add("supplierLine");
+            ls.add("suckLine");
+            ls.add("insulateSwitch");
+            ls.add("lightProtected");
+            ls.add("segInsulation");
+            ls.add("phaseInsulation");
+            ls.add("downAnchor");
+            ls.add("brand");
+            ls.add("pulloutBei");
+            ls.add("pulloutMiddle");
+            ls.add("pulloutShang");
+            ls.add("heightBei");
+            ls.add("heightMiddle");
+            ls.add("heightShang");
+            InputStream is = new FileInputStream(AttachUtil.getFilepath(attachment));
+            List<Map<String, Object>> res = ExcelUtils.getImportData(is, ls);
+
+            Catalog catalog = new Catalog(713L);
+            NetElectricalArea nea = new NetElectricalArea();
+
+            for(int i=0;i<res.size();i++) {
+                BasicNetBar entity = new BasicNetBar();
+                BeanUtil.transMap2Bean2(res.get(i),entity);
+
+                String neaName = res.get(i).get("nea_name")==null?"":res.get(i).get("nea_name").toString();
+                if(neaName.equals("泰安工区")){
+                    nea.setId(11L);
+                }else if(neaName.equals("济南西工区")){
+                    nea.setId(12L);
+                }else if(neaName.equals("禹城工区")){
+                    nea.setId(13L);
+                }else {
+                    nea = new NetElectricalArea();
+                }
+                entity.setNetElectricalArea(nea);
+                entity.setCat(catalog);
+                basicNetBarDao.clear();
+                basicNetBarDao.save(entity);
+                basicNetBarDao.flush();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+}

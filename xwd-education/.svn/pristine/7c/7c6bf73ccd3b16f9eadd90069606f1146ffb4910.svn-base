@@ -1,0 +1,144 @@
+package com.ict.web.modules.data.work.web;
+
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.ict.web.commons.config.Global;
+import com.ict.web.commons.web.BaseController;
+import com.ict.web.commons.web.Page;
+import com.ict.web.modules.data.work.entity.Bridge;
+import com.ict.web.modules.data.work.entity.Pier;
+import com.ict.web.modules.data.work.entity.Pile;
+import com.ict.web.modules.data.work.service.BridgeService;
+import com.ict.web.modules.data.work.service.PierService;
+import com.ict.web.modules.data.work.service.PileService;
+import com.ict.web.modules.sys.entity.Catalog;
+import com.ict.web.modules.sys.service.CatalogService;
+
+
+/**
+ * 
+ *  @description:桩基Controller
+ *  @author: wangjianwei 
+ *  @create Date:2016年4月25日 上午11:28:14
+ */
+@Controller
+@RequestMapping(value = "data/work/pile")
+public class PileController extends BaseController {
+	@Autowired
+	private CatalogService catalogService;
+	@Autowired
+	PileService pileService;
+	@Autowired
+	BridgeService bridgeService;
+	@Autowired
+	PierService pierService;
+
+	@ModelAttribute
+	public Pile get(@RequestParam(required = false) Long id) {
+		if (id != null) {
+			return pileService.get(id);
+		} else {
+			return new Pile();
+		}
+	}
+
+	@RequiresPermissions("data:work:pile:view")
+	@RequestMapping(value = { "list", "" })
+	public String list(Pile entity, HttpServletRequest request,
+			HttpServletResponse response, Model model,@RequestParam(required = false) Long catalog) {
+		Page<Pile> page = pileService.find(new Page<Pile>(request, response),
+				entity,catalog);
+		model.addAttribute("page", page);
+		if(catalog!=null){			
+			Catalog cat = catalogService.getById(catalog);
+			entity.setCat(cat);
+		}
+		model.addAttribute("pile", entity);
+		return "modules/data/work/pileList";
+	}
+
+	@RequiresPermissions("data:work:pile:view")
+	@RequestMapping(value = "form")
+	public String form(Pile entity, Model model,@RequestParam(required = false) Long catalog) {
+		if(catalog!=null){			
+			Catalog cat = catalogService.getById(catalog);
+			entity.setCat(cat);
+		}
+		
+		//获取桥梁
+		List<Bridge> listbri = bridgeService.findAllList();
+		model.addAttribute("listbri",listbri);
+		
+		//获取墩身
+		List<Pier> listPier = pierService.findAllList();
+		model.addAttribute("listPier",listPier);
+		
+		model.addAttribute("pile", entity);
+		return "modules/data/work/pileForm";
+	}
+	
+	@RequiresPermissions("data:work:pile:view")
+	@RequestMapping(value = "view")
+	public String view(Pile entity, Model model) {
+		model.addAttribute("pile", entity);
+		return "modules/data/work/pileView";
+	}
+
+	@RequiresPermissions("data:work:pile:edit")
+	@RequestMapping(value = "save")
+	public String save(Pile entity, Model model,
+			RedirectAttributes redirectAttributes) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/data/work/pile/?repage";// "+Global.getAdminPath()+"
+		}
+		if (!beanValidator(model, entity)) {
+			return form(entity, model,entity.getCat().getId());
+		}
+		pileService.save(entity);
+		addMessage(redirectAttributes, "保存成功");
+		return "redirect:/data/work/pile/?repage&catalog="+entity.getCat().getId();// "+Global.getAdminPath()+"
+	}
+
+	@RequiresPermissions("data:work:pile:edit")
+	@RequestMapping(value = "deleteMulti")
+    public String deleteMulti(@RequestParam String assembleDelId, RedirectAttributes redirectAttributes) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/data/work/pile/?repage";// "+Global.getAdminPath()+"
+		}
+		pileService.deleteMulti(assembleDelId);
+		addMessage(redirectAttributes, "删除成功");
+		return "redirect:/data/work/pile/?repage";// "+Global.getAdminPath()+"
+	}
+
+    /**
+     * 删除方法
+     * @param id
+     * @param catalogid
+     * @param redirectAttributes
+     * @return
+     */
+    @RequestMapping(value = "delete")
+    public String delete(Long id,Long catalog,RedirectAttributes redirectAttributes){
+
+    	pileService.delete(id);
+
+        addMessage(redirectAttributes,"删除成功");
+
+        return "redirect:/data//work/pile/list?repage&catalog="+catalog;
+    }
+}

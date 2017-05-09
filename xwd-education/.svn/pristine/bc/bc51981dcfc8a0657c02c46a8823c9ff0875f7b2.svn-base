@@ -1,0 +1,54 @@
+package com.ict.web.modules.inf.nk.web;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.ict.web.commons.web.BaseController;
+import com.ict.web.commons.web.Page;
+import com.ict.web.modules.inf.nk.entity.OnePoleOneFile;
+import com.ict.web.modules.inf.nk.service.OnePoleOneFileService;
+
+/**
+ * 
+ *  @description:一杆一档基础数据表Controller
+ *  @author: lutao 
+ *  @create Date:2016年4月24日
+ */
+@Controller
+@RequestMapping(value = "inf/nk/onepoleonefile")
+public class OnePoleOneFileController extends BaseController {
+	@Autowired
+	private OnePoleOneFileService service;
+	
+	@ModelAttribute
+	public OnePoleOneFile get(@RequestParam(required = false) Long id) {
+		if (id != null) {
+			return service.get(id);
+		} else {
+			return new OnePoleOneFile();
+		}
+	}
+	
+	@RequestMapping(value = { "list", "" })
+	public String list(OnePoleOneFile entity, HttpServletRequest request, HttpServletResponse response, Model model) {
+		Page<OnePoleOneFile> page = service.find(new Page<OnePoleOneFile>(request, response), entity);
+		
+		model.addAttribute("page", page);
+		model.addAttribute("onePoleOneFile", entity);
+		
+		return "modules/inf/nk/onePoleOneFileList";
+	}
+	
+	@RequestMapping(value = "view")
+	public String view(OnePoleOneFile entity, Model model) {
+		model.addAttribute("onePoleOneFile", entity);
+		return "modules/inf/nk/onePoleOneFileView";
+	}
+}

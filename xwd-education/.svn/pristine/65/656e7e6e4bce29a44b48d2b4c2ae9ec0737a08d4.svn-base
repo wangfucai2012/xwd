@@ -1,0 +1,138 @@
+package com.ict.web.modules.data.work.web;
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.ict.web.commons.config.Global;
+import com.ict.web.commons.web.BaseController;
+import com.ict.web.commons.web.Page;
+import com.ict.web.modules.assetcard.entity.AssetCard;
+import com.ict.web.modules.assetcard.service.AssetCardServices;
+import com.ict.web.modules.data.work.entity.OilPipelines;
+import com.ict.web.modules.data.work.service.OilPipelinesService;
+import com.ict.web.modules.sys.entity.Catalog;
+import com.ict.web.modules.sys.service.CatalogService;
+
+
+
+/**
+ * 
+ *  @description:油气管线Controller
+ *  @author: wangjianwei 
+ *  @create Date:2016年4月25日 上午11:11:16
+ */
+@Controller
+@RequestMapping(value = "data/work/oilpipelines")
+public class OilPipelinesController extends BaseController {
+	@Autowired
+	private CatalogService catalogService;
+	@Autowired
+	OilPipelinesService oilPipelinesService;
+	@Autowired
+	private AssetCardServices assetCardservice;
+
+	@ModelAttribute
+	public OilPipelines get(@RequestParam(required = false) Long id) {
+		if (id != null) {
+			return oilPipelinesService.get(id);
+		} else {
+			return new OilPipelines();
+		}
+	}
+
+	@RequiresPermissions("data:work:oilpipelines:view")
+	@RequestMapping(value = { "list", "" })
+	public String list(OilPipelines entity, HttpServletRequest request,
+			HttpServletResponse response, Model model,@RequestParam(required = false) Long catalog) {
+		Page<OilPipelines> page = oilPipelinesService.find(new Page<OilPipelines>(request, response),
+				entity,catalog);
+		model.addAttribute("page", page);
+		if(catalog!=null){			
+			Catalog cat = catalogService.getById(catalog);
+			entity.setCat(cat);
+		}
+		model.addAttribute("oilPipelines", entity);
+		return "modules/data/work/oilPipelinesList";
+	}
+
+	@RequiresPermissions("data:work:oilpipelines:view")
+	@RequestMapping(value = "form")
+	public String form(OilPipelines entity, Model model,@RequestParam(required = false) Long catalog) {
+		if(catalog!=null){			
+			Catalog cat = catalogService.getById(catalog);
+			entity.setCat(cat);
+			List<AssetCard> listorg= assetCardservice.getByCatalog(catalog);
+			if(listorg.size()>0){			
+				model.addAttribute("listorg", listorg);
+			}else{
+			List<AssetCard> listorgs= assetCardservice.getByCatalog(cat.getParents().getId());
+			model.addAttribute("listorg", listorgs);
+			}
+		}
+		model.addAttribute("oilPipelines", entity);
+		return "modules/data/work/oilPipelinesForm";
+	}
+	
+	@RequiresPermissions("data:work:oilpipelines:view")
+	@RequestMapping(value = "view")
+	public String view(OilPipelines entity, Model model) {
+		model.addAttribute("oilPipelines", entity);
+		return "modules/data/work/oilPipelinesView";
+	}
+
+	@RequiresPermissions("data:work:oilpipelines:edit")
+	@RequestMapping(value = "save")
+	public String save(OilPipelines entity, Model model,
+			RedirectAttributes redirectAttributes) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/data/work/oilpipelines/?repage";// "+Global.getAdminPath()+"
+		}
+		if (!beanValidator(model, entity)) {
+			return form(entity, model,entity.getCat().getId());
+		}
+		oilPipelinesService.save(entity);
+		addMessage(redirectAttributes, "保存成功");
+		return "redirect:/data/work/oilpipelines/?repage&catalog="+entity.getCat().getId();// "+Global.getAdminPath()+"
+	}
+
+	@RequiresPermissions("data:work:oilpipelines:edit")
+	@RequestMapping(value = "deleteMulti")
+    public String deleteMulti(@RequestParam String assembleDelId, RedirectAttributes redirectAttributes) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/data/work/oilpipelines/?repage";// "+Global.getAdminPath()+"
+		}
+		oilPipelinesService.deleteMulti(assembleDelId);
+		addMessage(redirectAttributes, "删除成功");
+		return "redirect:/data/work/oilpipelines/?repage";// "+Global.getAdminPath()+"
+	}
+
+    /**
+     * 删除方法
+     * @param id
+     * @param catalog
+     * @param redirectAttributes
+     * @return
+     */
+    @RequestMapping(value = "delete")
+    public String delete(Long id,Long catalog,RedirectAttributes redirectAttributes){
+
+    	oilPipelinesService.delete(id);
+
+        addMessage(redirectAttributes,"删除成功");
+
+        return "redirect:/data//work/oilpipelines/list?repage&catalog="+catalog;
+    }
+}

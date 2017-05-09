@@ -1,0 +1,278 @@
+package com.ict.web.modules.assetcard.entity;
+
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.ict.web.commons.entity.CodeEntity;
+import com.ict.web.modules.sys.entity.Catalog;
+import com.ict.web.modules.sys.entity.Office;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.*;
+
+import javax.persistence.Entity;
+import javax.persistence.*;
+import javax.persistence.Table;
+import java.io.Serializable;
+import java.util.Date;
+
+/**
+ * 固资卡片
+ * Created by nemo on 16-5-31.
+ */
+@Entity
+@Table(name = "data_assetcard")
+@DynamicInsert
+@DynamicUpdate
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+public class AssetCard extends CodeEntity implements Serializable {
+
+        /**
+         *
+         */
+        private static final long serialVersionUID = 1L;
+        private Long id;
+        private String name;//固资名称
+        private String assetCode;//固资编号
+        private String cardCode;//卡片编号
+        private String unit;//单位
+        private String assetNum;//数量
+        private String specification;//规格型号
+        private String certificateNo;//证书编号
+        private String orgAssetValue;//初试价值
+        private String orgFabricateValue;//初试安装费
+        private String reValue;//重估后价值
+        private String reFabricate;//重估安装费
+        private String constructCompany;//重估建设单位
+        private Date constructDate;//建成时间
+        private Long constructNo;//出厂编号
+        private Date deliveryDate;//交付使用日期
+        private String expectUsingTime;//预计使用年限
+        private boolean isFinancing;//是否融资租入
+        private String expectsalvage;//预计净残值
+        private String usingState;//使用状态
+        private String depreciation;//折  旧  率
+        private Date startDate;//起始日期
+        private String usingPerson;//使用人
+
+
+        private String usingDepartment;//使用单位
+        private String usingKeeper;//保管人
+        private String introduction;//备注
+        private Office cardOffice;//单位名称：(上部)
+        private  String type;//类别
+        private String countCharger;//会计机构负责人
+        private String cardMaker;//制卡人
+        private String material;//材质
+        private Catalog cat;//所属类型
+
+
+        @Id
+        @TableGenerator(name = "web_tab_pk", table = "web_tab_pk", pkColumnName = "G_KEY", pkColumnValue = "data_assetcard", valueColumnName = "G_VALUE", allocationSize = 1)
+        @GeneratedValue(strategy = GenerationType.TABLE, generator = "web_tab_pk")
+        public Long getId() {
+            return id;
+        }
+        public String getMaterial() {
+            return material;
+        }
+        public void setMaterial(String material) {
+            this.material = material;
+        }
+        public void setId(Long id) {
+            this.id = id;
+        }
+        public String getName() {
+            return name;
+        }
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getAssetCode() {
+            return assetCode;
+        }
+        public void setAssetCode(String assetCode) {
+            this.assetCode = assetCode;
+        }
+        public String getCardCode() {
+            return cardCode;
+        }
+        public void setCardCode(String cardCode) {
+            this.cardCode = cardCode;
+        }
+        public String getUnit() {
+            return unit;
+        }
+        public void setUnit(String unit) {
+            this.unit = unit;
+        }
+        public String getIntroduction() {
+            return introduction;
+        }
+        public void setIntroduction(String introduction) {
+            this.introduction = introduction;
+        }
+        public String getSpecification() {
+            return specification;
+        }
+        public void setSpecification(String specification) {
+            this.specification = specification;
+        }
+        public String getCertificateNo() {
+            return certificateNo;
+        }
+        public void setCertificateNo(String certificateNo) {
+            this.certificateNo = certificateNo;
+        }
+
+        public String getConstructCompany() {
+            return constructCompany;
+        }
+        public void setConstructCompany(String constructCompany) {
+            this.constructCompany = constructCompany;
+        }
+        public Date getConstructDate() {
+            return constructDate;
+        }
+        public void setConstructDate(Date constructDate) {
+            this.constructDate = constructDate;
+        }
+        public Long getConstructNo() {
+            return constructNo;
+        }
+        public void setConstructNo(Long constructNo) {
+            this.constructNo = constructNo;
+        }
+        public Date getDeliveryDate() {
+            return deliveryDate;
+        }
+        public void setDeliveryDate(Date deliveryDate) {
+            this.deliveryDate = deliveryDate;
+        }
+        public boolean isFinancing() {
+            return isFinancing;
+        }
+        public void setFinancing(boolean isFinancing) {
+            this.isFinancing = isFinancing;
+        }
+        public String getUsingState() {
+            return usingState;
+        }
+        public void setUsingState(String usingState) {
+            this.usingState = usingState;
+        }
+        public Date getStartDate() {
+            return startDate;
+        }
+        public void setStartDate(Date startDate) {
+            this.startDate = startDate;
+        }
+        public String getUsingPerson() {
+            return usingPerson;
+        }
+        public void setUsingPerson(String usingPerson) {
+            this.usingPerson = usingPerson;
+        }
+        public String getUsingDepartment() {
+            return usingDepartment;
+        }
+        public void setUsingDepartment(String usingDepartment) {
+            this.usingDepartment = usingDepartment;
+        }
+        public String getUsingKeeper() {
+            return usingKeeper;
+        }
+        public void setUsingKeeper(String usingKeeper) {
+            this.usingKeeper = usingKeeper;
+        }
+        @ManyToOne
+        @JoinColumn(name = "cardOffice_id")
+        @NotFound(action = NotFoundAction.IGNORE)
+        @JsonIgnore
+        public Office getCardOffice() {
+            return cardOffice;
+        }
+        public void setCardOffice(Office cardOffice) {
+            this.cardOffice = cardOffice;
+        }
+        public String getType() {
+            return type;
+        }
+        public void setType(String type) {
+            this.type = type;
+        }
+        public String getCountCharger() {
+            return countCharger;
+        }
+        public void setCountCharger(String countCharger) {
+            this.countCharger = countCharger;
+        }
+        public String getCardMaker() {
+            return cardMaker;
+        }
+        public void setCardMaker(String cardMaker) {
+            this.cardMaker = cardMaker;
+        }
+        @ManyToOne
+        @JoinColumn(name = "catalog_id")
+        @NotFound(action = NotFoundAction.IGNORE)
+        @JsonIgnore
+        public Catalog getCat() {
+            return cat;
+        }
+
+        public void setCat(Catalog cat) {
+            this.cat = cat;
+        }
+        public String getAssetNum() {
+            return assetNum;
+        }
+        public void setAssetNum(String assetNum) {
+            this.assetNum = assetNum;
+        }
+        public String getOrgAssetValue() {
+            return orgAssetValue;
+        }
+        public void setOrgAssetValue(String orgAssetValue) {
+            this.orgAssetValue = orgAssetValue;
+        }
+        public String getOrgFabricateValue() {
+            return orgFabricateValue;
+        }
+        public void setOrgFabricateValue(String orgFabricateValue) {
+            this.orgFabricateValue = orgFabricateValue;
+        }
+        public String getReValue() {
+            return reValue;
+        }
+        public void setReValue(String reValue) {
+            this.reValue = reValue;
+        }
+        public String getReFabricate() {
+            return reFabricate;
+        }
+        public void setReFabricate(String reFabricate) {
+            this.reFabricate = reFabricate;
+        }
+        public String getExpectUsingTime() {
+            return expectUsingTime;
+        }
+        public void setExpectUsingTime(String expectUsingTime) {
+            this.expectUsingTime = expectUsingTime;
+        }
+        public String getExpectsalvage() {
+            return expectsalvage;
+        }
+        public void setExpectsalvage(String expectsalvage) {
+            this.expectsalvage = expectsalvage;
+        }
+        public String getDepreciation() {
+            return depreciation;
+        }
+        public void setDepreciation(String depreciation) {
+            this.depreciation = depreciation;
+        }
+        public static long getSerialversionuid() {
+            return serialVersionUID;
+        }
+
+}

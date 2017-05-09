@@ -1,0 +1,77 @@
+package com.web.modules.dataimport.urils;
+
+import com.web.commons.config.Global;
+import com.web.modules.sys.entity.Attachment;
+import org.joda.time.DateTime;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+
+/**
+ * Created by nemo on 16-6-17.
+ */
+public class AttachUtil {
+
+    /**
+     * 上传文件
+     * @param file
+     * @return
+     * @throws IllegalStateException
+     * @throws IOException
+     */
+    @Transactional(readOnly = false)
+    public static Attachment saveUploadFile(MultipartFile file)
+            throws IllegalStateException, IOException {
+        if (file == null) {
+            return null;
+        }
+        String fileToPath = Global.getFileRootPath();
+        Attachment attach = new Attachment();
+        if (!file.isEmpty()) {
+            // 判断目录
+            String saveRelativePath = new DateTime().toString("yyyyMM");
+            String savePath = fileToPath + saveRelativePath;
+            File path = new File(savePath);
+            // 没有路径就直接创建
+            if (!(path.exists() && path.isDirectory())) {
+                path.mkdirs();
+            }
+            // 放到规定目录，用的Spring的自带的transferTo没有用FileUtils（主要是这个类还没写完呢。。。）
+            String saveName = System.currentTimeMillis() + ".xls";
+            file.transferTo(new File(path + "/" + saveName));
+
+            // 然后保存到Attachment
+            String fileSuffix = file.getOriginalFilename().substring(
+                    file.getOriginalFilename().lastIndexOf("."));
+
+            attach.setSaveName(saveName);
+            attach.setSavePath(savePath + "/");
+            attach.setFileName(file.getOriginalFilename());
+            attach.setFileSize(file.getSize());
+            attach.setFileSuffix(fileSuffix);
+            attach.setContentType(file.getContentType());
+            attach.setSaveRelativePath(saveRelativePath + "/");
+            attach.setFileType("upload");
+            //dao.save(attach);
+        }
+        return attach;
+    }
+
+    /**
+     * 获取附件地址
+     * @param attachment
+     * @return
+     * @throws IOException
+     */
+    public static String getFilepath(Attachment attachment) throws IOException {
+        if (attachment != null) {
+            File f = new File(attachment.getSavePath() + attachment.getSaveName());
+            if (f.exists()) {
+                return f.getAbsolutePath();
+            }
+        }
+        return null;
+    }
+}

@@ -1,0 +1,139 @@
+package com.ict.web.modules.data.work.web;
+
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.ict.web.commons.config.Global;
+import com.ict.web.commons.web.BaseController;
+import com.ict.web.commons.web.Page;
+import com.ict.web.modules.assetcard.entity.AssetCard;
+import com.ict.web.modules.assetcard.service.AssetCardServices;
+import com.ict.web.modules.data.work.entity.RailwayCrossesRailway;
+import com.ict.web.modules.data.work.service.RailwayCrossesRailwayService;
+import com.ict.web.modules.sys.entity.Catalog;
+import com.ict.web.modules.sys.service.CatalogService;
+
+
+
+/**
+ * 
+ *  @description:铁跨铁Controller
+ *  @author: wangjianwei 
+ *  @create Date:2016年4月25日 上午11:35:04
+ */
+@Controller
+@RequestMapping(value = "data/work/railwaycrossesrailway")
+public class RailwayCrossesRailwayController extends BaseController {
+	@Autowired
+	private CatalogService catalogService;
+	@Autowired
+	RailwayCrossesRailwayService railwayCrossesRailwayService;
+	@Autowired
+	private AssetCardServices assetCardservice;
+
+	@ModelAttribute
+	public RailwayCrossesRailway get(@RequestParam(required = false) Long id) {
+		if (id != null) {
+			return railwayCrossesRailwayService.get(id);
+		} else {
+			return new RailwayCrossesRailway();
+		}
+	}
+
+	@RequiresPermissions("data:work:railwaycrossesrailway:view")
+	@RequestMapping(value = { "list", "" })
+	public String list(RailwayCrossesRailway entity, HttpServletRequest request,
+			HttpServletResponse response, Model model,@RequestParam(required = false) Long catalog) {
+		Page<RailwayCrossesRailway> page = railwayCrossesRailwayService.find(new Page<RailwayCrossesRailway>(request, response),
+				entity,catalog);
+		model.addAttribute("page", page);
+		if(catalog!=null){			
+			Catalog cat = catalogService.getById(catalog);
+			entity.setCat(cat);
+		}
+		model.addAttribute("railwayCrossesRailway", entity);
+		return "modules/data/work/railwayCrossesRailwayList";
+	}
+
+	@RequiresPermissions("data:work:railwaycrossesrailway:view")
+	@RequestMapping(value = "form")
+	public String form(RailwayCrossesRailway entity, Model model,@RequestParam(required = false) Long catalog) {
+		if(catalog!=null){			
+			Catalog cat = catalogService.getById(catalog);
+			entity.setCat(cat);
+			List<AssetCard> listorg= assetCardservice.getByCatalog(catalog);
+			if(listorg.size()>0){			
+				model.addAttribute("listorg", listorg);
+			}else{
+			List<AssetCard> listorgs= assetCardservice.getByCatalog(cat.getParents().getId());
+			model.addAttribute("listorg", listorgs);
+			}
+		}
+		model.addAttribute("railwayCrossesRailway", entity);
+		return "modules/data/work/railwayCrossesRailwayForm";
+	}
+	
+	@RequiresPermissions("data:work:railwaycrossesrailway:view")
+	@RequestMapping(value = "view")
+	public String view(RailwayCrossesRailway entity, Model model) {
+		model.addAttribute("railwayCrossesRailway", entity);
+		return "modules/data/work/railwayCrossesRailwayView";
+	}
+
+	@RequiresPermissions("data:work:railwaycrossesrailway:edit")
+	@RequestMapping(value = "save")
+	public String save(RailwayCrossesRailway entity, Model model,
+			RedirectAttributes redirectAttributes) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/data/work/railwaycrossesrailway/?repage";// "+Global.getAdminPath()+"
+		}
+		if (!beanValidator(model, entity)) {
+			return form(entity, model,entity.getCat().getId());
+		}
+		railwayCrossesRailwayService.save(entity);
+		addMessage(redirectAttributes, "保存成功");
+		return "redirect:/data/work/railwaycrossesrailway/?repage&catalog="+entity.getCat().getId();// "+Global.getAdminPath()+"
+	}
+
+	@RequiresPermissions("data:work:railwaycrossesrailway:edit")
+	@RequestMapping(value = "deleteMulti")
+    public String deleteMulti(@RequestParam String assembleDelId, RedirectAttributes redirectAttributes) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/data/work/railwaycrossesrailway/?repage";// "+Global.getAdminPath()+"
+		}
+		railwayCrossesRailwayService.deleteMulti(assembleDelId);
+		addMessage(redirectAttributes, "删除成功");
+		return "redirect:/data/work/railwaycrossesrailway/?repage";// "+Global.getAdminPath()+"
+	}
+
+    /**
+    * 删除方法
+    * @param id
+    * @param catalogid
+    * @param redirectAttributes
+    * @return
+    */
+   @RequestMapping(value = "delete")
+   public String delete(Long id,Long catalog,RedirectAttributes redirectAttributes){
+
+	   railwayCrossesRailwayService.delete(id);
+
+       addMessage(redirectAttributes,"删除成功");
+
+       return "redirect:/data//work/railwaycrossesrailway/list?repage&catalog="+catalog;
+   }
+}

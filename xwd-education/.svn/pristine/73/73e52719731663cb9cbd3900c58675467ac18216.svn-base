@@ -1,0 +1,140 @@
+package com.ict.web.modules.assetcard.service;
+
+import com.google.common.collect.Lists;
+import com.ict.web.commons.service.BaseService;
+import com.ict.web.commons.web.Page;
+import com.ict.web.modules.assetcard.entity.AssetCard;
+import com.ict.web.modules.assetcard.dao.AssetCardDaos;
+
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 固资卡皮的Service层
+ * Created by nemo on 16-5-31.
+ */
+@Service
+@Transactional(readOnly = true)
+public class AssetCardServices extends BaseService {
+
+    @Autowired
+    private AssetCardDaos dao;
+
+    /**
+     * 根据ID获取
+     *
+     * @param id
+     * @return
+     */
+    public AssetCard getById(Long id) {
+        return dao.get(id);
+    }
+
+    /**
+     * 保存
+     *
+     * @param entity
+     */
+    @Transactional(readOnly = false)
+    public void save(AssetCard entity) {
+        dao.clear();
+        dao.save(entity);
+    }
+
+    /**
+     * 删除
+     *
+     * @param id
+     */
+    public void delete(Long id) {
+        dao.clear();
+        dao.deleteById(id);
+    }
+
+    /**
+     * 根据分页参数获取
+     *
+     * @return
+     */
+    public Page<AssetCard> getByPage(Page<AssetCard> page, AssetCard entity) {
+        DetachedCriteria dc = dao.createDetachedCriteria();
+        /**
+         * 需要的是未标志为删除的数据
+         */
+        dc.add(Restrictions.eq(AssetCard.FIELD_DEL_FLAG, AssetCard.DEL_FLAG_NORMAL));
+        if(entity.getCat()!=null&&entity.getCat().getId()!=null){
+            dc.add(Restrictions.or(Restrictions.eq("cat.id", entity.getCat().getId())));
+        }else{
+            return null;
+        }
+        if(entity.getAssetCode()!=null&&!"".equals(entity.getAssetCode())){
+            dc.add(Restrictions.like("assetCode", "%"+entity.getAssetCode()+"%"));
+        }
+
+        /**
+         * GIS使用 Add by Nemo on 2016/06/28
+         */
+        if(entity.getAssetCode()!=null && !entity.getAssetCode().trim().equals("")){
+            dc.add(Restrictions.like("assetCode","%"+entity.getAssetCode()+"%"));
+        }
+        if(entity.getMstart()!=null && !entity.getMstart().equals("")){
+            dc.add(Restrictions.ge("centerM",entity.getMstart()));
+        }
+        if(entity.getMend()!=null && !entity.getMend().equals("")){
+            dc.add(Restrictions.le("centerM",entity.getMend()));
+        }
+
+
+        //dc.addOrder(Order.asc("assetCode"));
+        return dao.find(page, dc);
+    }
+
+    /**
+     * 通过catalogid获取固资信息
+     *
+     * @param catalogid
+     */
+    public List<AssetCard> getByCatalog(Long catalogid){
+        DetachedCriteria dc = dao.createDetachedCriteria();
+        /**
+         * 需要的是未标志为删除的数据
+         */
+        dc.add(Restrictions.eq(AssetCard.FIELD_DEL_FLAG, AssetCard.DEL_FLAG_NORMAL));
+        if(catalogid!=null){
+            dc.add(Restrictions.or(Restrictions.eq("cat.id", catalogid)));
+            return dao.find(dc);
+        }else{
+            return new ArrayList<AssetCard>();
+        }
+    }
+    
+	/**
+	 * 通过固资卡片获取设备类型
+	 * @param deviceType
+	 * @return
+	 */
+	public List<AssetCard> getAssetcardByDeviceType(Long deviceType){
+		DetachedCriteria dc = dao.createDetachedCriteria();
+		dc.add(Restrictions.eq(AssetCard.FIELD_DEL_FLAG, AssetCard.DEL_FLAG_NORMAL));
+		dc.add(Restrictions.eq("cat.id", deviceType));
+		dc.addOrder(Order.asc("sort"));
+		List<AssetCard> result = dao.find(dc);
+		List<AssetCard> resultList = Lists.newArrayList();
+		if(result!=null && result.size()>0){
+			for(AssetCard ac: result){
+				AssetCard assetCard = new AssetCard();
+				assetCard.setId(ac.getId());
+				assetCard.setName(ac.getName());
+				resultList.add(assetCard);
+			}
+		}
+		return resultList;
+	}
+}

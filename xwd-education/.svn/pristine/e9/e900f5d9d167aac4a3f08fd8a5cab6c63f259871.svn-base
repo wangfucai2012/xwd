@@ -1,0 +1,117 @@
+package com.ict.web.modules.data.comm.web;
+
+import com.ict.web.commons.web.BaseController;
+import com.ict.web.commons.web.Page;
+import com.ict.web.modules.data.comm.entity.CommunicationEq;
+import com.ict.web.modules.data.comm.service.CommunicationEqService;
+import com.ict.web.modules.sys.entity.Catalog;
+import com.ict.web.modules.sys.service.CatalogService;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+/**
+ *  @Controller
+ *  @description:通信设备通用Controller
+ *  @author:wangjianwei 
+ *  @create Date:2016年6月13日 下午9:19:11
+ */
+@Controller
+@RequestMapping(value = "data/comm/communicationeq")
+public class CommunicationEqController extends BaseController {
+
+    @Autowired
+    private CommunicationEqService service;
+    @Autowired
+    private CatalogService catalogservice;
+
+    @ModelAttribute("communicationEq")
+    public CommunicationEq get(@RequestParam(required = false) Long id) {
+        if (id != null) {
+            return service.getById(id);
+        } else {
+            return new CommunicationEq();
+        }
+    }
+
+    /**
+     * 默认首页
+     * @param model
+     * @param entity 查询参数
+     * @return
+     */
+    @RequestMapping(value = {"","index"})
+    public String index(Model model, CommunicationEq entity, HttpServletRequest request, HttpServletResponse response,Long catalog){
+        if(catalog!=null){
+            Catalog cat = catalogservice.getById(catalog);
+            entity.setCat(cat);
+        }
+        Page<CommunicationEq> page = service.getByPage(new Page<CommunicationEq>(request,response),entity,catalog);
+        model.addAttribute("page",page);
+        model.addAttribute("catalog",catalog);
+        model.addAttribute("communicationEq",entity);
+        return "modules/data/comm/communicationEqList";
+    }
+
+    /**
+     * 前往新增或者修改
+     * @param entity
+     * @param model
+     * @return
+     */
+    @RequestMapping(value = "form")
+    public String form(CommunicationEq entity, Model model,Long catalog) {
+        if(catalog!=null){
+        	  Catalog cat = catalogservice.getById(catalog);
+        	  entity.setCat(cat);
+        }
+        model.addAttribute("communicationEq", entity);
+        model.addAttribute("catalog",catalog);
+        return "modules/data/comm/communicationEqForm";
+    }
+
+    /**
+     * 保存方法
+     * @param entity
+     * @param redirectAttributes
+     * @return
+     */
+    @RequestMapping(value = "save",method = RequestMethod.POST)
+    public String save(CommunicationEq entity, RedirectAttributes redirectAttributes,Model model,Long catalog){
+
+        service.save(entity);
+       
+        addMessage(redirectAttributes,"保存成功");
+        redirectAttributes.addAttribute("catalog",catalog);
+
+        return "redirect:/data/comm/communicationeq";
+    }
+
+    /**
+     * 删除方法
+     * @param id
+     * @param redirectAttributes
+     * @return
+     */
+    @RequestMapping(value = "delete")
+    public String delete(Long id,RedirectAttributes redirectAttributes,Long catalog){
+
+        service.delete(id);
+
+        addMessage(redirectAttributes,"删除成功");
+        redirectAttributes.addAttribute("catalog",catalog);
+
+        return "redirect:/data/comm/communicationeq";
+    }
+}

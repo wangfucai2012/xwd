@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd"
+	default-lazy-init="true">
+
+	<description>Shiro安全配置</description>
+
+	<context:property-placeholder
+		ignore-unresolvable="true" location="classpath*:/application.properties" />
+
+	<bean name="shiroFilterChainDefinitions" class="java.lang.String">
+		<constructor-arg>
+			<!-- 去掉了一个/cas = cas, ssl /logout=logout /login=authc-->
+			<value>
+				/static/** = anon
+				/flexbin/** = anon
+				/graniteamf/** = anon
+				/api/** = anon
+				/sys/catalog/treeData=anon <!--add by Nemo on 2016/05/31 , 为了方便测试，树接口，这里调用的是本程序的接口，去除本程序的树接口的拦截-->
+				/cas = cas
+				/logout = logout
+				/** = user
+			</value>
+		</constructor-arg>
+	</bean>
+
+	<!-- 項目自定义的Realm, 所有accountService依赖的dao都需要用depends-on声明 <bean id="shiroAccountRealm" 
+		class="com.ict.web.modules.sys.service.account.ShiroAccountRealm"> <property 
+		name="systemService" ref="systemService" /> </bean> -->
+
+	<!-- 项目自定义的Realm，支持CAS单点登录 -->
+	<bean id="shiroCasAccountRealm"
+		class="com.ict.web.modules.sys.service.account.ShiroCasAccountRealm">
+		<property name="systemService" ref="systemService" />
+		<property name="cachingEnabled" value="true" />
+		<property name="authenticationCachingEnabled" value="true" />
+		<property name="authenticationCacheName" value="authenticationCache" />
+		<property name="authorizationCachingEnabled" value="true" />
+		<property name="authorizationCacheName" value="authorizationCache" />
+		<property name="casServerUrlPrefix" value="${shiro.cas.casServerUrlPrefix}" />
+		<property name="casService" value="${shiro.cas.casService}" />
+	</bean>
+
+	<!-- Shiro Filter -->
+	<bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+		<property name="securityManager" ref="securityManager" />
+		<property name="loginUrl" value="${shiro.login.cas.url}" />
+		<property name="successUrl" value="/" />
+		<property name="filters">
+			<map>
+				<entry key="cas" value-ref="casFilter" />
+				<entry key="ssl" value-ref="sslFilter" />
+				<!-- <entry key="authc" value-ref="formAuthenticationFilter" /> -->
+			</map>
+		</property>
+		<property name="filterChainDefinitions">
+			<ref bean="shiroFilterChainDefinitions" />
+		</property>
+	</bean>
+
+	<!-- CAS认证过滤器 -->
+	<bean id="casFilter" class="org.apache.shiro.cas.CasFilter">
+		<property name="failureUrl" value="${shiro.failure.url}" />
+	</bean>
+
+	<!-- SSL加密 -->
+	<bean id="sslFilter" class="org.apache.shiro.web.filter.authz.SslFilter">
+		<property name="port" value="8443" />
+	</bean>
+
+	<!-- Shiro's main business-tier object for web-enabled applications -->
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+		<property name="realm" ref="shiroCasAccountRealm" />
+		<!-- <property name="realm" ref="shiroAccountRealm" /> -->
+		<property name="cacheManager" ref="shiroCacheManager" />
+		<property name="subjectFactory" ref="casSubjectFactory" />
+	</bean>
+
+	<!-- 支持Shiro对Controller的方法级AOP安全控制 begin -->
+	<bean
+		class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
+		depends-on="lifecycleBeanPostProcessor">
+		<property name="proxyTargetClass" value="true" />
+	</bean>
+	<bean
+		class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+		<property name="securityManager" ref="securityManager" />
+	</bean>
+	<!-- 支持Shiro对Controller的方法级AOP安全控制 end -->
+
+	<!-- 用户授权信息Cache, 采用EhCache -->
+	<bean id="shiroCacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+		<property name="cacheManager" ref="cacheManager" />
+		<property name="cacheManagerConfigFile" value="classpath:cache/ehcache-shiro.xml" />
+	</bean>
+
+	<!-- 保证实现了Shiro内部lifecycle函数的bean执行 -->
+	<bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor" />
+
+	<!-- 如果要实现cas的remember me的功能，需要用到下面这个bean，并设置到securityManager的subjectFactory中 -->
+	<bean id="casSubjectFactory" class="org.apache.shiro.cas.CasSubjectFactory" />
+</beans>

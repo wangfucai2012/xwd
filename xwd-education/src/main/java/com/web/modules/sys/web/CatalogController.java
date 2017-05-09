@@ -1,0 +1,281 @@
+package com.web.modules.sys.web;
+
+import com.alibaba.druid.support.json.JSONUtils;
+import com.google.common.collect.Lists;
+import com.web.commons.web.BaseController;
+import com.web.modules.sys.entity.Catalog;
+import com.web.modules.sys.service.CatalogService;
+import com.web.modules.sys.service.DictService;
+import org.apache.shiro.authz.annotation.RequiresUser;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+/**
+ * 目录分类的Controller
+ * created by nemo 2016/05/11
+ */
+@Controller
+@RequestMapping(value = "sys/catalog")
+public class CatalogController extends BaseController {
+
+	@Autowired
+	private CatalogService catalogService;
+
+	@Autowired
+	private DictService dictService;
+
+	@ModelAttribute("catalog")
+	public Catalog get(@RequestParam(required = false) Long id) {
+		if (id != null) {
+			return catalogService.getById(id);
+		} else {
+			return new Catalog();
+		}
+	}
+
+	/**
+	 * 默认首页
+	 * @return
+	 */
+	@RequestMapping(value = {"/index",""})
+	public String index(Model model,String level){
+
+		List<Catalog> list = Lists.newArrayList();
+		List<Catalog> sourcelist = catalogService.findAllCatalog(level);
+		Catalog.sortList(list, sourcelist, 2L);
+
+		model.addAttribute("list", list);
+		model.addAttribute("level",level);
+		return "modules/sys/catalogList";
+	}
+
+	/**
+	 * 跳转至更新或者新增页面
+	 * @param parentid
+	 * @param id
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(value = {"/form"})
+	public String add(@RequestParam(required=false) Long parentid,@RequestParam(required=false) Long id,String level, Model model){
+		Catalog catalog = new Catalog();
+
+		/**
+		 * 如果ID不为空，则说明是更新，取得原来数据
+		 */
+		if(id!=null){
+			catalog = catalogService.getById(id);
+		}else if(parentid!=null){
+			catalog.setParents(catalogService.getById(parentid));
+		}
+		model.addAttribute("catalog", catalog);
+		model.addAttribute("level",(level==null)?catalog.getLevels():level);
+		return "modules/sys/catalogForm1";
+	}
+
+	/**
+	 * 保存方法
+	 * @param catalog 需要保存的对象
+	 * @param model
+	 * @param redirectAttributes
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping(value = "/save",method = RequestMethod.POST)
+	public String save(Catalog catalog, Model model, RedirectAttributes redirectAttributes, HttpServletRequest request){
+		//按钮类型为父级+1
+		if(catalog.getParents()!=null){
+			Catalog parent = catalogService.getById(catalog.getParents().getId());
+			catalog.setMenuType(parent.getMenuType()+1);
+			catalog.setParentIds(parent.getParentIds()+'.'+parent.getId());
+			catalog.setParents(parent);
+		}
+
+		//链接地址请确保已/开头
+		if(catalog.getHrefs()!=null){
+			catalog.setHrefs(catalog.getHrefs().startsWith("/")?catalog.getHrefs():"/"+catalog.getHrefs());
+		}
+
+		catalogService.save(catalog);
+		/**
+		 * 增加保存成功提示
+		 */
+		addMessage(redirectAttributes,"保存成功");
+		redirectAttributes.addAttribute("level",catalog.getLevels());
+		return "redirect:/sys/catalog";
+	}
+
+	/**
+	 * 删除方法
+	 * @return
+	 */
+	@RequestMapping(value = "delete")
+	public String delete(Long id,RedirectAttributes redirectAttributes){
+		Catalog catalog = catalogService.getById(id);
+		catalogService.delete(id);
+		/**
+		 * 增加删除成功
+		 */
+		addMessage(redirectAttributes,"删除成功");
+		redirectAttributes.addAttribute("level",catalog.getLevels());
+		return "redirect:/sys/catalog";
+	}
+
+	/**
+	 * 树需要的数据
+	 * @param response
+	 * @param  type 目录的类型
+	 * @param  p 需要查看的目录的父节点
+	 * @return
+	 */
+	@RequiresUser
+	@ResponseBody
+	@RequestMapping(value = "treeData")
+	public List<Map<String, Object>> treeData(HttpServletResponse response,String level,Long p,String type) {
+		response.setContentType("application/json; charset=UTF-8");
+		return catalogService.getCatalogList(level,p,type);
+	}
+
+
+	/**
+	 * 对外提供的web接口
+	 * @param response
+	 * @return
+	 */
+	@RequiresUser
+	@ResponseBody
+	@RequestMapping(value = "catalogData")
+	public List<Catalog> contalogData(String level, HttpServletResponse response) {
+		response.setContentType("application/json; charset=UTF-8");
+		List<Map<String, Object>> mapList = Lists.newArrayList();
+		List<Catalog> list = Lists.newArrayList();
+		List<Catalog> sourcelist = catalogService.findAllCatalog(level);
+		Catalog.sortList(list, sourcelist, 1L);
+		return list;
+	}
+
+	/**
+	 * 产生树菜单单独页，对外提供，直接产生单个树分页
+	 * @param response
+	 * @param level 需要的数据的级别,这里在字典表需要定义清晰：
+	 *             技术资料：1
+	 *             工务资料：2
+	 *             供电专业：3
+	 *             通信专业：4
+	 *             信号专业：5
+	 *             房建专业：6
+	 * @param p 需要查看的父节点的ID
+	 * @param level 需要的数据的类型，这里在字典表需要定义清晰
+	 *              设备台帐：1
+	 *              固资分类：2
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(value = { "catalogTreePage_old" })
+	public String list(HttpServletResponse response,String type,Long p,String level,Model model) {
+
+		List<Map<String,Object>> data = treeData(response,level,p,type);
+
+		model.addAttribute("p",p);
+		model.addAttribute("level",level);
+		model.addAttribute("type",type);
+		model.addAttribute("treeData", data);
+		return "modules/sys/catalogTree";
+
+	}
+
+	/**
+	 * 调用远程接口数据
+	 * @param type
+	 * @param p
+	 * @param level
+	 * @param model
+     * @return
+     */
+	@RequestMapping(value = "catalogTreePage")
+	public String getRemoteTreeData(String type,Long p,String level,Model model){
+
+		try {
+
+			/**
+			 * 从配置文件里面读取服务器地址
+			 */
+			Properties properties = new Properties();
+			InputStream in = getClass().getResourceAsStream("/application.properties");
+			properties.load(in);
+			String remoteAddr = properties.get("webService.remote.catalogTree.addr")+"?type="+type+"&p="+p+"&level="+level;
+
+			/**
+			 * 设定网络参数
+			 */
+			URL url = new URL(remoteAddr);
+			HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+			connection.setDoInput(true);
+			connection.setDoOutput(true);
+			connection.setRequestMethod("POST");
+			connection.setUseCaches(false);
+			connection.setInstanceFollowRedirects(true);
+			connection.setRequestProperty("Content-Type","application/x-www-form-urlencoded");
+			connection.connect();
+
+			/**
+			 * 回调数据
+			 */
+			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(),"UTF-8"));
+			String lines;
+			StringBuffer sbf = new StringBuffer();
+			while ((lines = reader.readLine()) != null) {
+				lines = new String(lines.getBytes());
+				sbf.append(lines);
+			}
+
+			/**
+			 * 数据转换传输
+			 */
+			Object data = JSONUtils.parse(sbf.toString());
+
+			model.addAttribute("p",p);
+			model.addAttribute("level",level);
+			model.addAttribute("type",type);
+			model.addAttribute("treeData", data);
+
+			reader.close();
+			// 断开连接
+			connection.disconnect();
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return "modules/sys/catalogTree";
+	}
+
+	/**
+	 * 干掉其他可能不必要的跳转控制器和页面一类的，统一跳转到到catalog的控制中心
+	 * Add by nemo on 2016/05/31
+	 */
+	@RequestMapping(value = "center")
+	public String catalogControlCenter(Long p,String type,String level,Model model){
+		    model.addAttribute("p",p);
+			model.addAttribute("level",level);
+			model.addAttribute("type",type);
+		return "modules/sys/catalogCenter";
+	}
+
+}

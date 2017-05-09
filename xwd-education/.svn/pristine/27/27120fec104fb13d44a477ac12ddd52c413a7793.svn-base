@@ -1,0 +1,140 @@
+package com.ict.web.modules.data.work.web;
+
+
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.ict.web.commons.config.Global;
+import com.ict.web.commons.web.BaseController;
+import com.ict.web.commons.web.Page;
+import com.ict.web.modules.assetcard.entity.AssetCard;
+import com.ict.web.modules.assetcard.service.AssetCardServices;
+import com.ict.web.modules.data.work.entity.Pipelines;
+import com.ict.web.modules.data.work.service.PipelinesService;
+import com.ict.web.modules.sys.entity.Catalog;
+import com.ict.web.modules.sys.service.CatalogService;
+
+
+
+/**
+ * 
+ *  @description:管线
+ *  @author: wangjianwei 
+ *  @create Date:2016年4月25日 上午11:23:37
+ */
+@Controller
+@RequestMapping(value = "data/work/pipelines")
+public class PipelinesController extends BaseController {
+	@Autowired
+	private CatalogService catalogService;
+	@Autowired
+	PipelinesService pipelinesService;
+	@Autowired
+	private AssetCardServices assetCardservice;
+
+	@ModelAttribute
+	public Pipelines get(@RequestParam(required = false) Long id) {
+		if (id != null) {
+			return pipelinesService.get(id);
+		} else {
+			return new Pipelines();
+		}
+	}
+
+	@RequiresPermissions("data:work:pipelines:view")
+	@RequestMapping(value = { "list", "" })
+	public String list(Pipelines entity, HttpServletRequest request,
+			HttpServletResponse response, Model model,@RequestParam(required = false) Long catalog) {
+		Page<Pipelines> page = pipelinesService.find(new Page<Pipelines>(request, response),
+				entity,catalog);
+		model.addAttribute("page", page);
+		if(catalog!=null){			
+			Catalog cat = catalogService.getById(catalog);
+			entity.setCat(cat);
+		}
+		model.addAttribute("pipelines", entity);
+		return "modules/data/work/pipelinesList";
+	}
+
+	@RequiresPermissions("data:work:pipelines:view")
+	@RequestMapping(value = "form")
+	public String form(Pipelines entity, Model model,@RequestParam(required = false) Long catalog) {
+		if(catalog!=null){			
+			Catalog cat = catalogService.getById(catalog);
+			entity.setCat(cat);
+			List<AssetCard> listorg= assetCardservice.getByCatalog(catalog);
+			if(listorg.size()>0){			
+				model.addAttribute("listorg", listorg);
+			}else{
+			List<AssetCard> listorgs= assetCardservice.getByCatalog(cat.getParents().getId());
+			model.addAttribute("listorg", listorgs);
+			}
+		}
+		model.addAttribute("pipelines", entity);
+		return "modules/data/work/pipelinesForm";
+	}
+	
+	@RequiresPermissions("data:work:pipelines:view")
+	@RequestMapping(value = "view")
+	public String view(Pipelines entity, Model model) {
+		model.addAttribute("pipelines", entity);
+		return "modules/data/work/pipelinesView";
+	}
+
+	@RequiresPermissions("data:work:pipelines:edit")
+	@RequestMapping(value = "save")
+	public String save(Pipelines entity, Model model,
+			RedirectAttributes redirectAttributes) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/data/work/pipelines/?repage";// "+Global.getAdminPath()+"
+		}
+		if (!beanValidator(model, entity)) {
+			return form(entity, model,entity.getCat().getId());
+		}
+		pipelinesService.save(entity);
+		addMessage(redirectAttributes, "保存成功");
+		return "redirect:/data/work/pipelines/?repage&catalog="+entity.getCat().getId();// "+Global.getAdminPath()+"
+	}
+
+	@RequiresPermissions("data:work:pipelines:edit")
+	@RequestMapping(value = "deleteMulti")
+    public String deleteMulti(@RequestParam String assembleDelId, RedirectAttributes redirectAttributes) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/data/work/pipelines/?repage";// "+Global.getAdminPath()+"
+		}
+		pipelinesService.deleteMulti(assembleDelId);
+		addMessage(redirectAttributes, "删除成功");
+		return "redirect:/data/work/pipelines/?repage";// "+Global.getAdminPath()+"
+	}
+
+    /**
+     * 删除方法
+     * @param id
+     * @param catalog
+     * @param redirectAttributes
+     * @return
+     */
+    @RequestMapping(value = "delete")
+    public String delete(Long id,Long catalog,RedirectAttributes redirectAttributes){
+
+    	pipelinesService.delete(id);
+
+        addMessage(redirectAttributes,"删除成功");
+
+        return "redirect:/data//work/pipelines/list?repage&catalog="+catalog;
+    }
+}

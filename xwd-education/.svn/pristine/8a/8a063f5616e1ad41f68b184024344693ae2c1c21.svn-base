@@ -1,0 +1,53 @@
+package com.ict.web.modules.inf.nk.web;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.ict.web.commons.web.Page;
+import com.ict.web.modules.inf.nk.entity.InfSubStation;
+import com.ict.web.modules.inf.nk.service.InfSubStationService;
+
+/**
+ * 
+ *  @description:变电所Controller
+ *  @author: lutao 
+ *  @create Date:2016年4月24日
+ */
+@Controller
+@RequestMapping(value = "inf/nk/infsubstation")
+public class InfSubStationController {
+	@Autowired
+	private InfSubStationService service;
+	
+	@ModelAttribute
+	public InfSubStation get(@RequestParam(required = false) Long id) {
+		if (id != null) {
+			return service.get(id);
+		} else {
+			return new InfSubStation();
+		}
+	}
+	
+	@RequestMapping(value = { "list", "" })
+	public String list(InfSubStation entity, HttpServletRequest request, HttpServletResponse response, Model model) {
+		Page<InfSubStation> page = service.find(new Page<InfSubStation>(request, response), entity);
+		
+		model.addAttribute("page", page);
+		model.addAttribute("infSubStation", entity);
+		
+		return "modules/inf/nk/infSubStationList";
+	}
+	
+	@RequestMapping(value = "view")
+	public String view(InfSubStation entity, Model model) {
+		model.addAttribute("infSubStation", entity);
+		return "modules/inf/nk/infSubStationView";
+	}
+}

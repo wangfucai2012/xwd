@@ -1,0 +1,119 @@
+package com.ict.web.modules.data.disease.web;
+
+import com.ict.web.commons.web.BaseController;
+import com.ict.web.commons.web.Page;
+
+import com.ict.web.modules.data.disease.entity.DisLimitProFrame;
+
+import com.ict.web.modules.data.disease.service.DisLimitProFrameService;
+import com.ict.web.modules.sys.entity.Catalog;
+import com.ict.web.modules.sys.service.CatalogService;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+/**
+ *  Controller
+ *  @description:工务病害库-限高架病害
+ *  @author:wangjianwei 
+ *  @create Date:2016年7月8日 下午3:05:33
+ */
+@Controller
+@RequestMapping(value = "data/disease/dislimitproframe")
+public class DisLimitProFrameController extends BaseController {
+
+    @Autowired
+    private DisLimitProFrameService service;
+    @Autowired
+    private CatalogService catalogservice;
+
+    @ModelAttribute("disLimitProFrame")
+    public DisLimitProFrame get(@RequestParam(required = false) Long id) {
+        if (id != null) {
+            return service.getById(id);
+        } else {
+            return new DisLimitProFrame();
+        }
+    }
+
+    /**
+     * 默认首页
+     * @param model
+     * @param entity 查询参数
+     * @return
+     */
+    @RequestMapping(value = {"","index"})
+    public String index(Model model, DisLimitProFrame entity, HttpServletRequest request, HttpServletResponse response,Long catalog){
+        if(catalog!=null){
+            Catalog cat = catalogservice.getById(catalog);
+            entity.setCat(cat);
+        }
+        Page<DisLimitProFrame> page = service.getByCatalog(new Page<DisLimitProFrame>(request,response),entity,catalog);
+
+        model.addAttribute("page",page);
+        model.addAttribute("catalog",catalog);
+        model.addAttribute("disLimitProFrame",entity);
+        return "modules/data/disease/disLimitProFrameList";
+    }
+
+    /**
+     * 前往新增或者修改
+     * @param entity
+     * @param model
+     * @return
+     */
+    @RequestMapping(value = "form")
+    public String form(DisLimitProFrame entity, Model model,Long catalog) {
+        if(catalog!=null){
+        	  Catalog cat = catalogservice.getById(catalog);
+        	  entity.setCat(cat);
+        }
+
+        model.addAttribute("disLimitProFrame", entity);
+        model.addAttribute("catalog",catalog);
+        return "modules/data/disease/disLimitProFrameForm";
+    }
+
+    /**
+     * 保存方法
+     * @param entity
+     * @param redirectAttributes
+     * @return
+     */
+    @RequestMapping(value = "save",method = RequestMethod.POST)
+    public String save(DisLimitProFrame entity, RedirectAttributes redirectAttributes,Model model,Long catalog){
+
+        service.save(entity);
+       
+        addMessage(redirectAttributes,"保存成功");
+        redirectAttributes.addAttribute("catalog",catalog);
+
+        return "redirect:/data/disease/dislimitproframe";
+    }
+
+    /**
+     * 删除方法
+     * @param id
+     * @param redirectAttributes
+     * @return
+     */
+    @RequestMapping(value = "delete")
+    public String delete(Long id,RedirectAttributes redirectAttributes,Long catalog){
+
+        service.delete(id);
+
+        addMessage(redirectAttributes,"删除成功");
+        redirectAttributes.addAttribute("catalog",catalog);
+
+        return "redirect:/data/disease/dislimitproframe";
+    }
+}

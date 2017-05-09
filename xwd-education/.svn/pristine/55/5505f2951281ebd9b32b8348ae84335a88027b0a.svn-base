@@ -1,0 +1,200 @@
+package com.ict.web.modules.data.work.web;
+
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.ict.web.commons.config.Global;
+import com.ict.web.commons.web.BaseController;
+import com.ict.web.commons.web.Page;
+import com.ict.web.modules.assetcard.entity.AssetCard;
+import com.ict.web.modules.assetcard.service.AssetCardServices;
+import com.ict.web.modules.data.work.entity.SteelRail;
+import com.ict.web.modules.data.work.service.SteelRailService;
+import com.ict.web.modules.sys.entity.Attachment;
+import com.ict.web.modules.sys.entity.Catalog;
+import com.ict.web.modules.sys.service.AttachmentService;
+import com.ict.web.modules.sys.service.CatalogService;
+
+
+/**
+ * 
+ *  @description:钢轨Controller
+ *  @author: wangjianwei 
+ *  @create Date:2016年4月25日 下午2:45:12
+ */
+@Controller
+@RequestMapping(value = "data/work/steelrail")
+public class SteelRailController extends BaseController {
+	@Autowired
+	private CatalogService catalogService;
+	@Autowired
+	SteelRailService steelRailService;
+	@Autowired
+	private AssetCardServices assetCardservice;
+	@Autowired
+    private AttachmentService attachmentService;
+
+	@ModelAttribute
+	public SteelRail get(@RequestParam(required = false) Long id) {
+		if (id != null) {
+			return steelRailService.get(id);
+		} else {
+			return new SteelRail();
+		}
+	}
+
+	@RequiresPermissions("data:work:steelrail:view")
+	@RequestMapping(value = { "list", "" })
+	public String list(SteelRail entity, HttpServletRequest request,
+			HttpServletResponse response, Model model,@RequestParam(required = false) Long catalog) {
+		Page<SteelRail> page = steelRailService.find(new Page<SteelRail>(request, response),
+				entity,catalog);
+		model.addAttribute("page", page);
+		if(catalog!=null){			
+			Catalog cat = catalogService.getById(catalog);
+			entity.setCat(cat);
+		}
+		model.addAttribute("steelRail", entity);
+		return "modules/data/work/steelRailList";
+	}
+
+	@RequiresPermissions("data:work:steelrail:view")
+	@RequestMapping(value = "form")
+	public String form(SteelRail entity, Model model,@RequestParam(required = false) Long catalog) {
+		if(catalog!=null){			
+			Catalog cat = catalogService.getById(catalog);
+			entity.setCat(cat);
+			List<AssetCard> listorg= assetCardservice.getByCatalog(catalog);
+			if(listorg.size()>0){			
+				model.addAttribute("listorg", listorg);
+			}else{
+			List<AssetCard> listorgs= assetCardservice.getByCatalog(cat.getParents().getId());
+			model.addAttribute("listorg", listorgs);
+			}
+		}
+
+        //图片附件
+        String attIds = entity.getImgAttachments();
+        List<Attachment> atts = attachmentService.getAttchByIds(attIds);
+        model.addAttribute("imgAtts",atts);
+
+        //图纸附件
+        attIds = entity.getAttachments();
+        atts = attachmentService.getAttchByIds(attIds);
+        model.addAttribute("atts",atts);
+
+		//说明文当
+		attIds = entity.getDocAttchments();
+		atts = attachmentService.getAttchByIds(attIds);
+		model.addAttribute("docAtts",atts);
+
+		//技术规范
+		attIds = entity.getTechnologyAttchments();
+		atts = attachmentService.getAttchByIds(attIds);
+		model.addAttribute("technologyAtts",atts);
+		
+		model.addAttribute("steelRail", entity);
+		return "modules/data/work/steelRailForm";
+	}
+	
+	@RequiresPermissions("data:work:steelrail:view")
+	@RequestMapping(value = "view")
+	public String view(SteelRail entity, Model model) {
+		model.addAttribute("steelRail", entity);
+		return "modules/data/work/steelRailView";
+	}
+
+	@RequiresPermissions("data:work:steelrail:edit")
+	@RequestMapping(value = "save")
+	public String save(SteelRail entity, Model model,
+			RedirectAttributes redirectAttributes, HttpServletRequest request) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/data/work/steelrail/?repage";// "+Global.getAdminPath()+"
+		}
+		if (!beanValidator(model, entity)) {
+			return form(entity, model,entity.getCat().getId());
+		}
+		
+		MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+        try {
+            // 图片资料
+			String remark = request.getParameter("imgAttsRemark");
+            List<MultipartFile> files = a.getFiles("pierfile");
+            List<Attachment> atts = attachmentService.saveAllUploadFile(files,remark);
+            entity.setImgAttachments(attachmentService.attchsToStringIds(entity.getImgAttachments(),atts));
+
+            // 图纸资料
+            files = a.getFiles("pierfile2");
+			remark = request.getParameter("attsRemark");
+            atts = attachmentService.saveAllUploadFile(files,remark);
+            entity.setAttachments(attachmentService.attchsToStringIds(entity.getAttachments(),atts));
+
+			// 说明文档
+			files = a.getFiles("pierfile3");
+			remark = request.getParameter("docAttsRemark");
+			atts = attachmentService.saveAllUploadFile(files,remark);
+			entity.setDocAttchments(attachmentService.attchsToStringIds(entity.getDocAttchments(),atts));
+
+			// 技术规范
+			files = a.getFiles("pierfile4");
+			remark = request.getParameter("technologyRemark");
+			atts = attachmentService.saveAllUploadFile(files,remark);
+			entity.setTechnologyAttchments(attachmentService.attchsToStringIds(entity.getTechnologyAttchments(),atts));
+
+            //操作附件表删除选择的附件
+            attachmentService.delAttchByIds(entity.getDelAttch());
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+		
+		steelRailService.save(entity);
+		addMessage(redirectAttributes, "保存成功");
+		return "redirect:/data/work/steelrail/?repage&catalog="+entity.getCat().getId();// "+Global.getAdminPath()+"
+	}
+
+	@RequiresPermissions("data:work:steelrail:edit")
+	@RequestMapping(value = "deleteMulti")
+    public String deleteMulti(@RequestParam String assembleDelId, RedirectAttributes redirectAttributes) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/data/work/steelrail/?repage";// "+Global.getAdminPath()+"
+		}
+		steelRailService.deleteMulti(assembleDelId);
+		addMessage(redirectAttributes, "删除成功");
+		return "redirect:/data/work/steelrail/?repage";// "+Global.getAdminPath()+"
+	}
+
+    /**
+     * 删除方法
+     * @param id
+     * @param catalogid
+     * @param redirectAttributes
+     * @return
+     */
+    @RequestMapping(value = "delete")
+    public String delete(Long id,Long catalog,RedirectAttributes redirectAttributes){
+
+    	steelRailService.delete(id);
+
+        addMessage(redirectAttributes,"删除成功");
+
+        return "redirect:/data//work/steelrail/list?repage&catalog="+catalog;
+    }
+}

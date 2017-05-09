@@ -1,0 +1,113 @@
+package com.ict.web.modules.data.work.web;
+
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.ict.web.commons.config.Global;
+import com.ict.web.commons.web.BaseController;
+import com.ict.web.commons.web.Page;
+import com.ict.web.modules.data.work.entity.SubgradeDrainage;
+import com.ict.web.modules.data.work.service.SubgradeDrainageService;
+import com.ict.web.modules.sys.entity.Catalog;
+import com.ict.web.modules.sys.service.CatalogService;
+
+
+
+
+/**
+ * 
+ *  @description:路基排水 Controller
+ *  @author:wangjianwei 
+ *  @create Date:2016年4月25日 下午2:48:02
+ */
+@Controller
+@RequestMapping(value = "data/work/subgradedrainage")
+public class SubgradeDrainageController extends BaseController {
+	@Autowired
+	private CatalogService catalogService;
+	@Autowired
+	SubgradeDrainageService subgradeDrainageService;
+
+	@ModelAttribute
+	public SubgradeDrainage get(@RequestParam(required = false) Long id) {
+		if (id != null) {
+			return subgradeDrainageService.get(id);
+		} else {
+			return new SubgradeDrainage();
+		}
+	}
+
+	@RequiresPermissions("data:work:subgradedrainage:view")
+	@RequestMapping(value = { "list", "" })
+	public String list(SubgradeDrainage entity, HttpServletRequest request,
+			HttpServletResponse response, Model model,@RequestParam(required = false) Long catalog) {
+		Page<SubgradeDrainage> page = subgradeDrainageService.find(new Page<SubgradeDrainage>(request, response),
+				entity,catalog);
+		model.addAttribute("page", page);
+		if(catalog!=null){			
+			Catalog cat = catalogService.getById(catalog);
+			entity.setCat(cat);
+		}
+		model.addAttribute("subgradeDrainage", entity);
+		return "modules/data/work/subgradeDrainageList";
+	}
+
+	@RequiresPermissions("data:work:subgradedrainage:view")
+	@RequestMapping(value = "form")
+	public String form(SubgradeDrainage entity, Model model,@RequestParam(required = false) Long catalog) {
+		if(catalog!=null){			
+			Catalog cat = catalogService.getById(catalog);
+			entity.setCat(cat);
+		}
+		model.addAttribute("subgradeDrainage", entity);
+		return "modules/data/work/subgradeDrainageForm";
+	}
+	
+	@RequiresPermissions("data:work:subgradedrainage:view")
+	@RequestMapping(value = "view")
+	public String view(SubgradeDrainage entity, Model model) {
+		model.addAttribute("subgradeDrainage", entity);
+		return "modules/data/work/subgradeDrainageView";
+	}
+
+	@RequiresPermissions("data:work:subgradedrainage:edit")
+	@RequestMapping(value = "save")
+	// @Valid
+	public String save(SubgradeDrainage entity, Model model,
+			RedirectAttributes redirectAttributes) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/data/work/subgradedrainage/?repage";// "+Global.getAdminPath()+"
+		}
+		if (!beanValidator(model, entity)) {
+			return form(entity, model,entity.getCat().getId());
+		}
+		subgradeDrainageService.save(entity);
+		addMessage(redirectAttributes, "保存成功");
+		return "redirect:/data/work/subgradedrainage/?repage";// "+Global.getAdminPath()+"
+	}
+
+	@RequiresPermissions("data:work:subgradedrainage:edit")
+	@RequestMapping(value = "deleteMulti")
+    public String deleteMulti(@RequestParam String assembleDelId, RedirectAttributes redirectAttributes) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/data/work/subgradedrainage/?repage";// "+Global.getAdminPath()+"
+		}
+		subgradeDrainageService.deleteMulti(assembleDelId);
+		addMessage(redirectAttributes, "删除成功");
+		return "redirect:/data/work/subgradedrainage/?repage";// "+Global.getAdminPath()+"
+	}
+
+	
+}

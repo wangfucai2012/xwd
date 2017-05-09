@@ -1,0 +1,214 @@
+package com.ict.web.modules.data.work.web;
+
+
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.ict.web.commons.config.Global;
+import com.ict.web.commons.web.BaseController;
+import com.ict.web.commons.web.Page;
+import com.ict.web.modules.assetcard.entity.AssetCard;
+import com.ict.web.modules.assetcard.service.AssetCardServices;
+import com.ict.web.modules.data.work.entity.Pipelines;
+import com.ict.web.modules.data.work.service.PipelinesService;
+import com.ict.web.modules.sys.entity.Attachment;
+import com.ict.web.modules.sys.entity.Catalog;
+import com.ict.web.modules.sys.entity.dict.Line;
+import com.ict.web.modules.sys.service.AttachmentService;
+import com.ict.web.modules.sys.service.CatalogService;
+import com.ict.web.modules.sys.service.dict.LineService;
+
+
+
+/**
+ * 
+ *  @description:管线
+ *  @author: wangjianwei 
+ *  @create Date:2016年4月25日 上午11:23:37
+ */
+@Controller
+@RequestMapping(value = "data/work/pipelines")
+public class PipelinesController extends BaseController {
+	@Autowired
+	private CatalogService catalogService;
+	@Autowired
+	private PipelinesService pipelinesService;
+	@Autowired
+	private AssetCardServices assetCardservice;
+	@Autowired
+	private LineService lineService;
+    @Autowired
+    private AttachmentService attachmentService;
+
+	@ModelAttribute
+	public Pipelines get(@RequestParam(required = false) Long id) {
+		if (id != null) {
+			return pipelinesService.get(id);
+		} else {
+			return new Pipelines();
+		}
+	}
+
+	@RequiresPermissions("data:work:pipelines:view")
+	@RequestMapping(value = { "list", "" })
+	public String list(Pipelines entity, HttpServletRequest request,
+			HttpServletResponse response, Model model,@RequestParam(required = false) Long catalog) {
+		Page<Pipelines> page = pipelinesService.find(new Page<Pipelines>(request, response),
+				entity,catalog);
+		model.addAttribute("page", page);
+		if(catalog!=null){			
+			Catalog cat = catalogService.getById(catalog);
+			entity.setCat(cat);
+		}
+		model.addAttribute("pipelines", entity);
+		return "modules/data/work/pipelinesList";
+	}
+
+	@RequiresPermissions("data:work:pipelines:view")
+	@RequestMapping(value = "form")
+	public String form(Pipelines entity, Model model,@RequestParam(required = false) Long catalog) {
+		if(catalog!=null){			
+			Catalog cat = catalogService.getById(catalog);
+			entity.setCat(cat);
+			
+			//获取固资卡片信息
+			List<AssetCard> listorg= assetCardservice.getByCatalog(catalog);
+			if(listorg.size()>0){			
+				model.addAttribute("listorg", listorg);
+			}else{
+			List<AssetCard> listorgs= assetCardservice.getByCatalog(cat.getParents().getId());
+			model.addAttribute("listorg", listorgs);
+			}
+			
+			//获取线信息
+			List<Line> listLine = lineService.findAll();
+			if(listLine.size()>0){
+				model.addAttribute("listline", listLine);
+			}
+		}
+		
+
+        //图片附件
+        String attIds = entity.getImgAttachments();
+        List<Attachment> atts = attachmentService.getAttchByIds(attIds);
+        model.addAttribute("imgAtts",atts);
+
+        //图纸附件
+        attIds = entity.getAttachments();
+        atts = attachmentService.getAttchByIds(attIds);
+        model.addAttribute("atts",atts);
+
+		//说明文当
+		attIds = entity.getDocAttchments();
+		atts = attachmentService.getAttchByIds(attIds);
+		model.addAttribute("docAtts",atts);
+
+		//技术规范
+		attIds = entity.getTechnologyAttchments();
+		atts = attachmentService.getAttchByIds(attIds);
+		model.addAttribute("technologyAtts",atts);
+		
+		model.addAttribute("pipelines", entity);
+		return "modules/data/work/pipelinesForm";
+	}
+	
+	@RequiresPermissions("data:work:pipelines:view")
+	@RequestMapping(value = "view")
+	public String view(Pipelines entity, Model model) {
+		model.addAttribute("pipelines", entity);
+		return "modules/data/work/pipelinesView";
+	}
+
+	@RequiresPermissions("data:work:pipelines:edit")
+	@RequestMapping(value = "save")
+	public String save(Pipelines entity, Model model,
+			RedirectAttributes redirectAttributes, HttpServletRequest request) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/data/work/pipelines/?repage";// "+Global.getAdminPath()+"
+		}
+		if (!beanValidator(model, entity)) {
+			return form(entity, model,entity.getCat().getId());
+		}
+		
+		MultipartHttpServletRequest a = (MultipartHttpServletRequest) request;
+        try {
+            // 图片资料
+			String remark = request.getParameter("imgAttsRemark");
+            List<MultipartFile> files = a.getFiles("pierfile");
+            List<Attachment> atts = attachmentService.saveAllUploadFile(files,remark);
+            entity.setImgAttachments(attachmentService.attchsToStringIds(entity.getImgAttachments(),atts));
+
+            // 图纸资料
+            files = a.getFiles("pierfile2");
+			remark = request.getParameter("attsRemark");
+            atts = attachmentService.saveAllUploadFile(files,remark);
+            entity.setAttachments(attachmentService.attchsToStringIds(entity.getAttachments(),atts));
+
+			// 说明文档
+			files = a.getFiles("pierfile3");
+			remark = request.getParameter("docAttsRemark");
+			atts = attachmentService.saveAllUploadFile(files,remark);
+			entity.setDocAttchments(attachmentService.attchsToStringIds(entity.getDocAttchments(),atts));
+
+			// 技术规范
+			files = a.getFiles("pierfile4");
+			remark = request.getParameter("technologyRemark");
+			atts = attachmentService.saveAllUploadFile(files,remark);
+			entity.setTechnologyAttchments(attachmentService.attchsToStringIds(entity.getTechnologyAttchments(),atts));
+
+            //操作附件表删除选择的附件
+            attachmentService.delAttchByIds(entity.getDelAttch());
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+		
+		pipelinesService.save(entity);
+		addMessage(redirectAttributes, "保存成功");
+		return "redirect:/data/work/pipelines/?repage&catalog="+entity.getCat().getId();// "+Global.getAdminPath()+"
+	}
+
+	@RequiresPermissions("data:work:pipelines:edit")
+	@RequestMapping(value = "deleteMulti")
+    public String deleteMulti(@RequestParam String assembleDelId, RedirectAttributes redirectAttributes) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/data/work/pipelines/?repage";// "+Global.getAdminPath()+"
+		}
+		pipelinesService.deleteMulti(assembleDelId);
+		addMessage(redirectAttributes, "删除成功");
+		return "redirect:/data/work/pipelines/?repage";// "+Global.getAdminPath()+"
+	}
+
+    /**
+     * 删除方法
+     * @param id
+     * @param catalog
+     * @param redirectAttributes
+     * @return
+     */
+    @RequestMapping(value = "delete")
+    public String delete(Long id,Long catalog,RedirectAttributes redirectAttributes){
+
+    	pipelinesService.delete(id);
+
+        addMessage(redirectAttributes,"删除成功");
+
+        return "redirect:/data//work/pipelines/list?repage&catalog="+catalog;
+    }
+}

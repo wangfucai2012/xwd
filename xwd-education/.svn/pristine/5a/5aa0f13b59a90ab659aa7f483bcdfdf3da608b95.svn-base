@@ -1,0 +1,142 @@
+package com.ict.web.modules.data.work.web;
+
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.ict.web.commons.config.Global;
+import com.ict.web.commons.web.BaseController;
+import com.ict.web.commons.web.Page;
+import com.ict.web.modules.assetcard.entity.AssetCard;
+import com.ict.web.modules.assetcard.service.AssetCardServices;
+import com.ict.web.modules.data.work.entity.Bridge;
+import com.ict.web.modules.data.work.service.BridgeService;
+import com.ict.web.modules.sys.entity.Catalog;
+import com.ict.web.modules.sys.service.CatalogService;
+
+
+
+
+/**
+ * 
+ *  @description:桥梁Controller
+ *  @author: wangjianwei 
+ *  @create Date:2016年4月25日 上午10:02:44
+ */
+@Controller
+@RequestMapping(value = "data/work/bridge")
+public class BridgeController extends BaseController {
+	@Autowired
+	private CatalogService catalogService;
+	@Autowired
+	private BridgeService bridgeService;
+	@Autowired
+	private AssetCardServices assetCardservice;
+
+	@ModelAttribute
+	public Bridge get(@RequestParam(required = false) Long id) {
+		if (id != null) {
+			return bridgeService.get(id);
+		} else {
+			return new Bridge();
+		}
+	}
+
+	@RequiresPermissions("data:work:bridge:view")
+	@RequestMapping(value = { "list", "" })
+	public String list(Bridge entity, HttpServletRequest request,
+			HttpServletResponse response, Model model,@RequestParam(required = false) Long catalog) {
+		Page<Bridge> page = bridgeService.find(new Page<Bridge>(request, response),
+				entity,catalog);
+		model.addAttribute("page", page);
+		if(catalog!=null){			
+			Catalog cat = catalogService.getById(catalog);
+			entity.setCat(cat);
+		}
+		model.addAttribute("bridge", entity);
+		return "modules/data/work/bridgeList";
+	}
+
+	@RequiresPermissions("data:work:bridge:view")
+	@RequestMapping(value = "form")
+	public String form(Bridge entity, Model model,@RequestParam(required = false) Long catalog) {
+		if(catalog!=null){			
+			Catalog cat = catalogService.getById(catalog);
+			entity.setCat(cat);
+			List<AssetCard> listorg= assetCardservice.getByCatalog(catalog);
+			if(listorg.size()>0){			
+				model.addAttribute("listorg", listorg);
+			}else{
+			List<AssetCard> listorgs= assetCardservice.getByCatalog(cat.getParents().getId());
+			model.addAttribute("listorg", listorgs);
+			}
+		}
+		model.addAttribute("bridge", entity);
+		return "modules/data/work/bridgeForm";
+	}
+	
+	@RequiresPermissions("data:work:bridge:view")
+	@RequestMapping(value = "view")
+	public String view(Bridge entity, Model model) {
+		model.addAttribute("bridge", entity);
+		return "modules/data/work/bridgeView";
+	}
+
+	@RequiresPermissions("data:work:bridge:edit")
+	@RequestMapping(value = "save")
+	public String save(Bridge entity, Model model,
+			RedirectAttributes redirectAttributes) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/data/work/bridge/?repage";// "+Global.getAdminPath()+"
+		}
+		if (!beanValidator(model, entity)) {
+			return form(entity, model,entity.getCat().getId());
+		}
+		bridgeService.save(entity);
+		addMessage(redirectAttributes, "保存成功");
+		return "redirect:/data/work/bridge/?repage&catalog="+entity.getCat().getId();// "+Global.getAdminPath()+"
+	}
+
+	@RequiresPermissions("data:work:bridge:edit")
+	@RequestMapping(value = "deleteMulti")
+	public String deleteMulti(@RequestParam String assembleDelId,
+			RedirectAttributes redirectAttributes) {
+		if (Global.isDemoMode()) {
+			addMessage(redirectAttributes, "演示模式，不允许操作！");
+			return "redirect:/data/work/bridge/?repage";// "+Global.getAdminPath()+"
+		}
+		bridgeService.deleteMulti(assembleDelId);
+		addMessage(redirectAttributes, "删除成功");
+		return "redirect:/data/work/bridge/?repage";// "+Global.getAdminPath()+"
+	}
+	
+    /**
+     * 删除方法
+     * @param id
+     * @param catalogid
+     * @param redirectAttributes
+     * @return
+     */
+    @RequestMapping(value = "delete")
+    public String delete(Long id,Long catalogid,RedirectAttributes redirectAttributes){
+
+    	bridgeService.delete(id);
+
+        addMessage(redirectAttributes,"删除成功");
+
+        return "redirect:/data/assetCard/list?repage&catalog="+catalogid;
+    }
+	
+}

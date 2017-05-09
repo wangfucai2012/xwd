@@ -1,0 +1,93 @@
+package com.ict.web.modules.data.work.web;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import com.ict.web.commons.web.BaseController;
+
+import com.ict.web.modules.sys.entity.Catalog;
+import com.ict.web.modules.sys.service.CatalogService;
+
+
+@Controller
+@RequestMapping(value = "data/work")
+public class WorkController extends BaseController {
+    
+	@Autowired
+	private CatalogService catalogService;
+
+
+	@ModelAttribute
+	public Catalog get(@RequestParam(required = false) Long id) {
+		if (id != null) {
+			return catalogService.getById(id);
+		} else {
+			return new Catalog();
+		}
+	}
+
+	@RequestMapping(value = { "bridgetree" })
+	public String bridgeTree(Model model,@RequestParam(required = false) Long p,@RequestParam(required = false) String level,@RequestParam(required = false) String type
+			) {
+		Catalog cat=catalogService.getById(p);
+		model.addAttribute("cat",cat);
+		model.addAttribute("level",level);
+		model.addAttribute("p",p);
+		model.addAttribute("type",type);
+		return "modules/data/work/workBridge";
+	}
+	@RequestMapping(value = { "culverttree" })
+	public String culvertTree(Model model,@RequestParam(required = false) Long p,@RequestParam(required = false) String level,@RequestParam(required = false) String type
+			) {
+		Catalog cat=catalogService.getById(p);
+		model.addAttribute("cat",cat);
+		model.addAttribute("level",level);
+		model.addAttribute("p",p);
+		model.addAttribute("type",type);
+		return "modules/data/work/workCulvert";
+	}
+	@RequestMapping(value = { "subgradetree" })
+	public String subgradeTree(Model model,@RequestParam(required = false) Long p,@RequestParam(required = false) String level,@RequestParam(required = false) String type
+			) {
+		Catalog cat=catalogService.getById(p);
+		model.addAttribute("cat",cat);
+		model.addAttribute("level",level);
+		model.addAttribute("p",p);
+		model.addAttribute("type",type);
+		return "modules/data/work/workSubgrade";
+	}
+	@RequestMapping(value = { "tunneltree" })
+	public String tunnelTree(Model model,@RequestParam(required = false) Long p,@RequestParam(required = false) String level,@RequestParam(required = false) String type
+			) {
+		Catalog cat=catalogService.getById(p);
+		model.addAttribute("cat",cat);
+		model.addAttribute("level",level);
+		model.addAttribute("p",p);
+		model.addAttribute("type",type);
+		return "modules/data/work/workTunnel";
+	}
+	@RequestMapping(value = { "steelrailtree" })
+	public String steelRailTree(Model model,@RequestParam(required = false) Long p,@RequestParam(required = false) String level,@RequestParam(required = false) String type
+			) {
+		Catalog cat=catalogService.getById(p);
+		model.addAttribute("cat",cat);
+		model.addAttribute("level",level);
+		model.addAttribute("p",p);
+		model.addAttribute("type",type);
+		return "modules/data/work/workSteelRail";
+	}
+	@RequestMapping(value = { "othertree" })
+	public String otherTree(Model model,@RequestParam(required = false) Long p,@RequestParam(required = false) String level,@RequestParam(required = false) String type
+			) {
+		Catalog cat=catalogService.getById(p);
+		model.addAttribute("cat",cat);
+		model.addAttribute("level",level);
+		model.addAttribute("p",p);
+		model.addAttribute("type",type);
+		return "modules/data/work/workOther";
+	}
+	
+}

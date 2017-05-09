@@ -1,0 +1,152 @@
+<%@ page contentType="text/html;charset=UTF-8"%>
+<%@ include file="/WEB-INF/views/include/taglib.jsp"%>
+<%@ include file="/WEB-INF/views/include/treetable.jsp"%>
+<html>
+<head>
+<title></title>
+<meta name="decorator" content="default" />
+<style type="text/css">
+.table td i {
+	margin: 0 2px;
+}
+</style>
+
+<script type="text/javascript">
+<!--
+	function page(n, s) {
+		$("#pageNo").val(n);
+		$("#pageSize").val(s);
+		$("#searchForm").submit();
+		return false;
+	}
+//-->
+</script>
+</head>
+<body>
+<form:hidden path="hangingFence.cat.id"/>
+	<ul class="nav nav-tabs">
+		<li class="active"><a href="${ctx}/data/work/hangingfence?catalog=${hangingFence.cat.id}">吊围栏列表</a></li>
+		<li><a href="${ctx}/data/work/hangingfence/form?catalog=${hangingFence.cat.id}">吊围栏添加</a></li>
+	</ul>
+		<div class="searchBar">
+			<form:form id="searchForm" modelAttribute="hangingFence"
+				action="${ctx}/data/work/hangingfence/" method="post"
+				class="breadcrumb form-search">
+				<input id="pageNo" name="pageNo" type="hidden"
+					value="${page.pageNo}" />
+				<input id="pageSize" name="pageSize" type="hidden"
+					value="${page.pageSize}" />
+				<div>
+					<label>距外轨距离：</label><form:input path="lineName" htmlEscape="false" maxlength="50" class="input-small" />
+					<label>侧别：</label><form:input path="lineName" htmlEscape="false" maxlength="50" class="input-small" />
+					&nbsp;<input id="btnSubmit" class="btn btn-primary" type="submit"
+						value="查询" /> &nbsp;<input id="btnReset" class="btn" type="reset"
+						value="重置" />
+				</div>
+			</form:form>
+		</div>
+
+		<sys:message msgcontent="${message}" />
+		<table id="contentTable"
+			class="table table-striped table-bordered table-condensed">
+			<thead>
+				<tr>
+					<th style="text-align: center;" width="5%"><input
+						type="checkbox" name="selectAll" id="selectAll"
+						onclick="selcheck();" title="全选/清除" /></th>
+					<th style="text-align: center;" width="5%">序号</th>
+					<th>所在线路</th>
+					<th>行别</th>
+					<th>侧别</th>
+					<th>栅栏起始里程</th>
+					<th>栅栏终止里程</th>
+					<th>栅栏长度(m)</th>
+					<th>网片样式</th>
+					<th>立柱样式</th>
+					<th>距外轨距离（米）</th>
+					<th>操作</th>
+			</thead>
+			<tbody>
+				<c:set value="0" var="i" scope="page" />
+				<c:forEach items="${page.list}" var="entity">
+					<c:set value="${pageScope.i + 1}" var="i" scope="page" />
+					<tr>
+						<td style="text-align: center;"><input type="checkbox"
+							name="objectId" value="${entity.id}" id="${entity.id}" /></td>
+						<td style="text-align: center;"><c:out
+								value="${(page.pageNo-1)* page.pageSize + pageScope.i }" /></td>
+						<td style="text-align: center;">&nbsp;${entity.lineName}</td>
+						<td style="text-align: center;">&nbsp;${entity.stream}</td>
+						<td style="text-align: center;">&nbsp;${entity.side}</td>
+						<%-- 
+						<td style="text-align: center;">&nbsp;${entity.startM}~${entity.endM}</td>
+						--%>
+						<td style="text-align: center;">
+		                <c:if test="${(entity.startM.indexOf('.')!=-1)}">
+		                    <c:set var="startM" value="${fn:split(entity.startM, '.')[0]}" />
+		                    <c:if test="${startM.length()>3}">
+		                        K ${fn:substring(startM, 0,startM.length()-3 )}
+		                        + ${fn:substring(startM, startM.length()-3, startM.length() )}
+		                    </c:if>
+		                    <c:if test="${startM.length()<=3}">
+		                        K 0
+		                        + ${startM}
+		                    </c:if>
+		                    .${fn:split(entity.startM,'.')[1]}
+		                </c:if>
+		                <c:if test="${(entity.startM.indexOf('.')==-1)}">
+		                    <c:set var="startM" value="${entity.startM}" />
+		                    <c:if test="${startM.length()>3}">
+		                        K ${fn:substring(startM, 0,startM.length()-3 )}
+		                        + ${fn:substring(startM, startM.length()-3, startM.length() )}
+		                    </c:if>
+		                    <c:if test="${startM.length()<=3}">
+		                        K 0
+		                        + ${startM}
+		                    </c:if>
+		                    .00
+		                </c:if>
+		            	</td>
+		            	<td style="text-align: center;">
+		                <c:if test="${(entity.endM.indexOf('.')!=-1)}">
+		                    <c:set var="endM" value="${fn:split(entity.endM, '.')[0]}" />
+		                    <c:if test="${endM.length()>3}">
+		                        K ${fn:substring(endM, 0,startM.length()-3 )}
+		                        + ${fn:substring(endM, endM.length()-3, endM.length() )}
+		                    </c:if>
+		                    <c:if test="${endM.length()<=3}">
+		                        K 0
+		                        + ${endM}
+		                    </c:if>
+		                    .${fn:split(entity.endM,'.')[1]}
+		                </c:if>
+		                <c:if test="${(entity.endM.indexOf('.')==-1)}">
+		                    <c:set var="endM" value="${entity.endM}" />
+		                    <c:if test="${endM.length()>3}">
+		                        K ${fn:substring(endM, 0,endM.length()-3 )}
+		                        + ${fn:substring(endM, endM.length()-3, endM.length() )}
+		                    </c:if>
+		                    <c:if test="${endM.length()<=3}">
+		                        K 0
+		                        + ${endM}
+		                    </c:if>
+		                    .00
+		                </c:if>
+		            	</td>
+						<td style="text-align: center;">&nbsp;${entity.length}</td>
+						<td style="text-align: center;">&nbsp;${entity.netstyle}</td>
+						<td style="text-align: center;">&nbsp;${entity.lzstyle}</td>
+						<td style="text-align: center;">&nbsp;${entity.range}</td>
+						
+						<td style="text-align: center;">
+						    <a href="${ctx}/data/work/hangingfence/form?id=${entity.id}&catalog=${entity.cat.id}">修改</a>
+							&nbsp;<a href="${ctx}/data/work/hangingfence/delete?id=${entity.id}&catalog=${entity.cat.id}"
+                			onclick="return confirmx('确认要删除数据吗？', this.href)">删除</a>
+						</td>
+					</tr>
+				</c:forEach>
+			</tbody>
+		</table>
+		<div class="pagination">${page}</div>
+</body>
+</html>
