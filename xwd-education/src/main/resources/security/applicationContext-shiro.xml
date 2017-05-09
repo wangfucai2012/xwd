@@ -16,9 +16,9 @@
 		<constructor-arg>
 			<!-- 去掉了一个/cas = cas, ssl /logout=logout /login=authc-->
 			<value>
-				/static/** = anon
+				<!--/static/** = anon
 				/flexbin/** = anon
-				/graniteamf/** = anon
+				/graniteamf/** = anon-->
 				/api/** = anon
 				/sys/catalog/treeData=anon <!--add by Nemo on 2016/05/31 , 为了方便测试，树接口，这里调用的是本程序的接口，去除本程序的树接口的拦截-->
 				/login.jsp =anon
